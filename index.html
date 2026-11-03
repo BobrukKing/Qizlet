@@ -1549,7 +1549,6 @@
           }
           lastTerm = term.value;
           scheduleTranslationLookup(term, translation, suggestions, help, loading, lookup);
-          sortEditorWordRows();
         });
         translation.addEventListener("input", () => {
           clearTimeout(lookup.timer);
@@ -1560,7 +1559,9 @@
           help.classList.remove("visible");
           loading.classList.remove("visible");
           term.setAttribute("aria-expanded", "false");
-          sortEditorWordRows();
+        });
+        translation.addEventListener("blur", () => {
+          setTimeout(sortEditorWordRows, 0);
         });
         translationField.append(translation, suggestions, loading, help);
         const remove = document.createElement("button");
@@ -1705,7 +1706,7 @@
       function sortEditorWordRows() {
         const container = document.getElementById("wordRows");
         const rows = [...container.querySelectorAll(".word-row")];
-        rows
+        const sortedRows = rows
           .map((row, index) => ({
             row,
             index,
@@ -1716,7 +1717,10 @@
           .sort((first, second) =>
             Number(!first.missing) - Number(!second.missing) || first.index - second.index
           )
-          .forEach(item => container.append(item.row));
+          .map(item => item.row);
+        if (sortedRows.some((row, index) => row !== rows[index])) {
+          sortedRows.forEach(row => container.append(row));
+        }
       }
 
       function startStudy(set) {
