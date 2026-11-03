@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>Dictionary — Learn Words</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20243a;
+      --muted: #737991;
+      --line: #e8eaf1;
+      --paper: #fff;
+      --canvas: #f6f7fb;
+      --purple: #6754e8;
+      --purple-dark: #5542d2;
+      --purple-soft: #f0edff;
+      --green: #17865b;
+      --red: #c83d54;
+      --shadow: 0 18px 50px rgba(34, 39, 70, .08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(103, 84, 232, .3);
+      outline-offset: 2px;
+    }
+    .app-shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; }
+    header {
+      height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+    .brand-mark {
+      width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px;
+      color: white; background: linear-gradient(135deg, #8978ff, #5d49dd);
+      box-shadow: 0 6px 15px rgba(103, 84, 232, .25);
+    }
+    .header-note { color: var(--muted); font-size: 14px; }
+    main { padding: 48px 0 72px; }
+    .hero { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .eyebrow { color: var(--purple); font-weight: 750; font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; }
+    h1 { margin: 8px 0 7px; font-size: clamp(30px, 5vw, 42px); line-height: 1.12; letter-spacing: -1.6px; }
+    .hero p { margin: 0; color: var(--muted); }
+    .button {
+      min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 0 17px; border: 1px solid transparent; border-radius: 12px; font-weight: 700;
+      transition: transform .15s, background .15s, box-shadow .15s;
+    }
+    .button:hover { transform: translateY(-1px); }
+    .button-primary { background: var(--purple); color: white; box-shadow: 0 7px 16px rgba(103, 84, 232, .2); }
+    .button-primary:hover { background: var(--purple-dark); }
+    .button-secondary { background: white; border-color: var(--line); color: var(--ink); }
+    .button-quiet { background: transparent; color: var(--muted); border-color: var(--line); }
+    .button-danger { color: var(--red); background: #fff5f6; border-color: #ffe2e6; }
+    .button-small { min-height: 37px; padding: 0 12px; border-radius: 10px; font-size: 14px; }
+    .button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    .collection-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
+    .collection-head h2 { margin: 0; font-size: 18px; letter-spacing: -.35px; }
+    .count { color: var(--muted); font-size: 14px; }
+    .deck-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .deck-card {
+      min-width: 0; padding: 22px; background: var(--paper); border: 1px solid var(--line);
+      border-radius: 18px; box-shadow: 0 3px 12px rgba(34, 39, 70, .025);
+    }
+    .deck-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .deck-card h3 { margin: 0; font-size: 19px; line-height: 1.3; overflow-wrap: anywhere; }
+    .word-count { color: var(--muted); font-size: 13px; white-space: nowrap; padding-top: 3px; }
+    .deck-preview { color: var(--muted); font-size: 14px; margin: 10px 0 19px; min-height: 22px; }
+    .deck-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .deck-progress { margin: 0 0 16px; }
+    .deck-progress-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 7px; color: var(--muted); font-size: 12px; }
+    .deck-progress-track { height: 5px; overflow: hidden; border-radius: 8px; background: #e9eaf2; }
+    .deck-progress-fill { height: 100%; border-radius: inherit; background: var(--green); }
+    .deck-answer-stats { margin: 0 0 15px; color: var(--muted); font-size: 12px; }
+    .deck-answer-stats .good { color: var(--green); font-weight: 700; }
+    .deck-answer-stats .wrong { color: var(--red); font-weight: 700; }
+    .word-list-summary { margin: 0 0 16px; color: var(--muted); }
+    .word-list { display: grid; gap: 10px; }
+    .word-list-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    .word-list-entry-missing { border-color: #f0c7ca; background: #fffafb; }
+    .word-list-term { font-weight: 750; overflow-wrap: anywhere; }
+    .word-list-translation { margin-top: 3px; color: var(--muted); overflow-wrap: anywhere; }
+    .word-list-score { min-width: 62px; text-align: right; font-weight: 750; }
+    .word-list-score.mastered { color: var(--green); }
+    .word-list-score.partial { color: #b8860b; }
+    .word-list-score.unlearned { color: var(--red); }
+    .word-list-score.needs-translation { color: var(--red); font-size: 12px; }
+    .word-list-track { grid-column: 1 / -1; height: 5px; overflow: hidden; border-radius: 5px; background: #f0c7ca; }
+    .word-list-fill { height: 100%; border-radius: inherit; transition: width .35s ease; }
+    .word-list-fill.mastered { background: #28a66a; }
+    .word-list-fill.partial { background: #e8b83e; }
+    .word-list-fill.unlearned { background: #dd626b; }
+    .learn-stats { display: flex; justify-content: space-between; gap: 12px; margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+    .learn-stats strong { color: var(--ink); }
+    .learn-progress-track { display: flex; height: 12px; overflow: hidden; border-radius: 10px; background: #f0c7ca; }
+    .learn-progress-segment { height: 100%; transition: width .35s ease; }
+    .learn-progress-segment.green { background: #28a66a; }
+    .learn-progress-segment.yellow { background: #e8b83e; }
+    .learn-progress-segment.red { background: #dd626b; }
+    .learn-progress-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: -10px 0 20px; color: var(--muted); font-size: 12px; }
+    .learn-progress-legend strong { color: var(--ink); }
+    .learn-stage-label { margin-bottom: 8px; color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+    .learn-question { margin: 9px 0 8px; font-size: clamp(24px, 4vw, 32px); line-height: 1.2; overflow-wrap: anywhere; }
+    .learn-status { margin-bottom: 20px; }
+    .learn-input-form { display: flex; gap: 9px; }
+    .learn-input-form .text-input { flex: 1; }
+    .learn-result { margin-top: 20px; }
+    .next-review { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+    .empty-state {
+      grid-column: 1 / -1; text-align: center; background: white; padding: 55px 20px;
+      border: 1px dashed #d9dbe7; border-radius: 18px;
+    }
+    .empty-icon { width: 54px; height: 54px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 17px; background: var(--purple-soft); color: var(--purple); font-size: 25px; }
+    .empty-state h3 { margin: 0 0 6px; font-size: 18px; }
+    .empty-state p { margin: 0 0 18px; color: var(--muted); }
+    .view { display: none; }
+    .view.active { display: block; }
+    .editor, .study-wrap, .test-wrap, .learn-wrap { width: min(720px, 100%); margin: 0 auto; }
+    .back-link { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 20px; padding: 4px 0; border: 0; background: none; color: var(--muted); font-weight: 650; }
+    .back-link:hover { color: var(--ink); }
+    .panel { padding: 28px; background: white; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+    .panel h1 { font-size: 30px; letter-spacing: -1px; margin: 0 0 6px; }
+    .panel-intro { color: var(--muted); margin: 0 0 25px; }
+    .field-label { display: block; margin: 18px 0 7px; font-size: 14px; font-weight: 700; }
+    .text-input {
+      width: 100%; height: 47px; padding: 0 13px; color: var(--ink); background: #fff;
+      border: 1px solid #dfe1ea; border-radius: 10px;
+    }
+    .text-input::placeholder { color: #a4a8b7; }
+    .words-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 27px 0 10px; }
+    .words-heading h2 { margin: 0; font-size: 16px; }
+    .word-row { display: grid; grid-template-columns: 1fr 1fr 38px; gap: 9px; margin-bottom: 9px; align-items: start; }
+    .translation-field { position: relative; min-width: 0; }
+    .translation-suggestions {
+      position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 2; overflow: hidden;
+      border: 1px solid var(--line); border-radius: 11px; background: white; box-shadow: var(--shadow);
+    }
+    .translation-suggestions[hidden] { display: none; }
+    .translation-help { display: none; margin: 5px 2px 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .translation-help.visible { display: block; }
+    .translation-loading { display: none; align-items: center; gap: 8px; padding: 9px 12px; color: var(--muted); font-size: 13px; }
+    .translation-loading.visible { display: flex; }
+    .translation-spinner {
+      width: 15px; height: 15px; flex: 0 0 15px; border: 2px solid #e3e1f7;
+      border-top-color: var(--purple); border-radius: 50%; animation: translation-spin .7s linear infinite;
+    }
+    @keyframes translation-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .translation-spinner { animation-duration: 1.8s; }
+    }
+    .translation-suggestion {
+      display: block; width: 100%; padding: 9px 12px; border: 0; border-bottom: 1px solid var(--line);
+      background: white; color: var(--ink); text-align: left; font-size: 14px;
+    }
+    .translation-suggestion:last-child { border-bottom: 0; }
+    .translation-suggestion:hover, .translation-suggestion:focus-visible { background: var(--purple-soft); color: var(--purple-dark); }
+    .remove-word { width: 38px; height: 47px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--muted); font-size: 20px; }
+    .remove-word:hover { color: var(--red); border-color: #ffcbd3; background: #fff8f9; }
+    .editor-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--line); margin-top: 24px; padding-top: 19px; }
+    .bulk-import { margin: 20px 0 24px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fafaff; }
+    .bulk-import-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 750; }
+    .bulk-import-help { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+    .bulk-import textarea { width: 100%; min-height: 100px; padding: 11px 12px; resize: vertical; color: var(--ink); border: 1px solid #dfe1ea; border-radius: 10px; font: inherit; }
+    .bulk-import textarea:focus { outline: 3px solid rgba(111, 92, 238, .15); border-color: var(--purple); }
+    .bulk-import .button { margin-top: 10px; }
+    .merge-wrap { width: min(720px, 100%); margin: 0 auto; }
+    .merge-set-list { display: grid; gap: 10px; margin: 18px 0 24px; }
+    .merge-set-option { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: white; cursor: pointer; }
+    .merge-set-option:has(input:checked) { border-color: #b7adff; background: #fbfaff; }
+    .merge-set-option input { width: 18px; height: 18px; accent-color: var(--purple); }
+    .merge-set-name { font-weight: 750; }
+    .merge-set-count { margin-left: auto; color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .merge-empty { margin: 18px 0; color: var(--muted); }
+    .library-wrap { width: min(900px, 100%); margin: 0 auto; }
+    .library-filters { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 12px; margin: 18px 0 20px; }
+    .library-status { display: flex; align-items: center; gap: 9px; min-height: 24px; margin: -8px 0 14px; color: var(--muted); font-size: 13px; }
+    .library-status .translation-spinner { display: none; }
+    .library-status.loading .translation-spinner { display: inline-block; }
+    .library-status.error { color: var(--red); }
+    .library-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .library-card { display: flex; flex-direction: column; min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 15px; background: white; }
+    .library-card-top { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+    .library-card h2 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+    .library-level { flex: 0 0 auto; padding: 4px 8px; border-radius: 8px; background: var(--purple-soft); color: var(--purple-dark); font-size: 12px; font-weight: 800; }
+    .library-description { margin: 10px 0; color: var(--muted); font-size: 14px; }
+    .library-preview { margin: 0 0 16px; color: var(--ink); font-size: 13px; line-height: 1.6; }
+    .library-source { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+    .library-card-count { margin: 0 0 8px; color: var(--green); font-size: 13px; font-weight: 750; }
+    .library-word-toggle { margin: 0 0 10px; align-self: flex-start; }
+    .library-word-list { max-height: 230px; overflow-y: auto; margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fafaff; font-size: 13px; line-height: 1.65; }
+    .library-word-list[hidden] { display: none; }
+    .library-word-list-item { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #ececf3; }
+    .library-word-list-item:last-child { border-bottom: 0; }
+    .library-word-level { color: var(--muted); white-space: nowrap; }
+    .library-card .button { align-self: flex-start; }
+    .library-empty { grid-column: 1 / -1; padding: 30px 18px; border: 1px dashed var(--line); border-radius: 14px; color: var(--muted); text-align: center; }
+    .study-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .study-title { font-weight: 750; overflow-wrap: anywhere; }
+    .progress-label { color: var(--muted); font-size: 14px; white-space: nowrap; }
+    .progress-track { height: 6px; background: #e9eaf2; border-radius: 10px; overflow: hidden; margin-bottom: 19px; }
+    .progress-fill { width: 0; height: 100%; background: var(--purple); border-radius: inherit; transition: width .2s; }
+    .flashcard {
+      width: 100%; min-height: 330px; padding: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 1px solid var(--line); border-radius: 22px; background: white; box-shadow: var(--shadow); text-align: center;
+      color: var(--ink); transition: transform .18s, background .18s; cursor: pointer;
+    }
+    .flashcard:hover { transform: translateY(-2px); }
+    .flashcard.is-flipped { background: #faf9ff; border-color: #dcd7ff; }
+    .card-label { margin-bottom: 14px; color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+    .card-word { max-width: 100%; font-size: clamp(26px, 5vw, 40px); font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
+    .card-hint { margin-top: 20px; color: #969bad; font-size: 13px; }
+    .study-controls { display: flex; justify-content: center; gap: 12px; margin-top: 19px; }
+    .study-controls .button { min-width: 145px; }
+    .test-card { padding: 28px; background: white; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+    .question-label { color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; }
+    .question { margin: 10px 0 23px; font-size: clamp(24px, 4vw, 32px); line-height: 1.2; overflow-wrap: anywhere; }
+    .answers { display: grid; gap: 10px; }
+    .answer-option {
+      width: 100%; min-height: 52px; padding: 12px 15px; text-align: left; color: var(--ink); background: white;
+      border: 1px solid var(--line); border-radius: 11px; font-weight: 600; overflow-wrap: anywhere;
+    }
+    .answer-option:hover:not(:disabled) { border-color: #b7adff; background: #fbfaff; }
+    .answer-option.correct { border-color: #8bd1b2; background: #effaf5; color: #126d49; }
+    .answer-option.incorrect { border-color: #f0a3ae; background: #fff3f4; color: #a92b40; }
+    .feedback { min-height: 25px; margin: 13px 0 0; font-weight: 700; }
+    .feedback.good { color: var(--green); }
+    .feedback.bad { color: var(--red); }
+    .test-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+    .score { color: var(--muted); font-size: 14px; }
+    .result { text-align: center; padding: 24px 12px 10px; }
+    .result-mark { margin-bottom: 8px; font-size: 48px; }
+    .result h2 { margin: 0 0 7px; font-size: 28px; }
+    .result p { color: var(--muted); margin: 0 0 22px; }
+    .result .button + .button { margin-left: 8px; }
+    .history-list { display: grid; gap: 14px; }
+    .history-entry { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+    .history-entry-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .history-entry-details { flex: 1; min-width: 0; }
+    .history-entry summary { cursor: pointer; list-style: none; }
+    .history-entry summary::-webkit-details-marker { display: none; }
+    .history-entry-title { font-weight: 750; }
+    .history-entry-meta { margin-top: 5px; color: var(--muted); font-size: 13px; }
+    .history-result { white-space: nowrap; color: var(--green); font-size: 14px; font-weight: 750; }
+    .history-delete { flex: 0 0 auto; align-self: center; }
+    .history-answer-list { display: grid; gap: 8px; margin-top: 17px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .history-answer { padding: 10px 12px; border-radius: 10px; background: #f7f8fb; font-size: 14px; overflow-wrap: anywhere; }
+    .history-answer.correct { background: #effaf5; }
+    .history-answer.incorrect { background: #fff3f4; }
+    .history-answer strong { display: block; margin-bottom: 3px; }
+    .history-empty { padding: 36px 20px; border: 1px dashed #d9dbe7; border-radius: 16px; background: white; color: var(--muted); text-align: center; }
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; z-index: 3; transform: translate(-50%, 16px);
+      padding: 11px 16px; border-radius: 11px; color: white; background: #25283a;
+      box-shadow: 0 8px 25px rgba(20, 22, 38, .2); opacity: 0; pointer-events: none; transition: .2s;
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    @media (max-width: 640px) {
+      .app-shell { width: min(100% - 28px, 540px); }
+      header { height: 66px; }
+      .header-note { display: none; }
+      main { padding: 32px 0 54px; }
+      .hero { align-items: start; flex-direction: column; margin-bottom: 27px; }
+      .hero-actions { display: grid; width: 100%; grid-template-columns: 1fr; }
+      .hero-actions .button { width: 100%; }
+      .deck-list { grid-template-columns: 1fr; }
+      .panel { padding: 21px 17px; }
+      .panel h1 { font-size: 27px; }
+      .word-row { grid-template-columns: 1fr 1fr 34px; gap: 6px; }
+      .remove-word { width: 34px; }
+      .text-input { padding: 0 9px; font-size: 14px; }
+      .words-heading { align-items: start; }
+      .flashcard { min-height: 290px; padding: 24px; }
+      .study-controls .button { min-width: 0; flex: 1; }
+      .test-card { padding: 22px 17px; }
+      .learn-input-form { flex-direction: column; }
+      .result .button + .button { margin: 8px 0 0; }
+      .word-list-entry { padding: 12px; }
+      .library-filters, .library-results { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <a class="brand" href="#" id="homeLink" aria-label="Dictionary — home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>dictionary</span>
+      </a>
+    </header>
+
+    <main>
+      <section id="homeView" class="view active" aria-label="My decks">
+        <div class="hero">
+          <div>
+            <h1>Dictionary</h1>
+          </div>
+          <div class="hero-actions">
+            <button class="button button-primary" id="createButton" type="button"><span aria-hidden="true">＋</span> Create deck</button>
+            <button class="button button-secondary" id="mergeDecksButton" type="button">Merge decks</button>
+            <button class="button button-secondary" id="onlineDecksButton" type="button">Find decks online</button>
+            <button class="button button-secondary" id="testHistoryButton" type="button">Test history</button>
+          </div>
+        </div>
+        <div class="collection-head">
+          <h2>My decks</h2>
+          <span class="count" id="setCount"></span>
+        </div>
+        <div class="deck-list" id="deckList"></div>
+      </section>
+
+      <section id="editorView" class="view" aria-label="Deck editor">
+        <div class="editor">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <form id="setForm" class="panel">
+            <h1 id="editorTitle">New deck</h1>
+            <p class="panel-intro">Start typing an English word to get Ukrainian translation suggestions online, or enter your own translation.</p>
+            <label class="field-label" for="setName">Deck name</label>
+            <input class="text-input" id="setName" name="setName" maxlength="80" placeholder="For example, Travel English" required>
+            <div class="words-heading">
+              <h2>Words and translations</h2>
+              <button class="button button-secondary button-small" id="addWordButton" type="button">＋ Add pair</button>
+            </div>
+            <div class="bulk-import">
+              <label class="bulk-import-label" for="bulkWords">Bulk add words</label>
+              <p class="bulk-import-help">One card per line. Separate the English word and Ukrainian translation with three spaces.</p>
+              <textarea id="bulkWords" placeholder="apple   яблуко&#10;banana   банан" spellcheck="false"></textarea>
+              <button class="button button-secondary button-small" id="importWordsButton" type="button">Import words</button>
+            </div>
+            <div id="wordRows"></div>
+            <div class="editor-footer">
+              <button class="button button-quiet" type="button" data-go-home>Cancel</button>
+              <button class="button button-primary" id="saveSetButton" type="submit">Save deck</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="mergeView" class="view" aria-label="Merge decks">
+        <div class="merge-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <form id="mergeForm" class="panel">
+            <h1>Merge decks</h1>
+            <p class="panel-intro">Select at least two decks. The original decks will remain unchanged.</p>
+            <label class="field-label" for="mergedSetName">New merged deck name</label>
+            <input class="text-input" id="mergedSetName" name="mergedSetName" maxlength="80" placeholder="For example, English review" required>
+            <div class="merge-set-list" id="mergeSetList"></div>
+            <div class="editor-footer">
+              <button class="button button-quiet" type="button" data-go-home>Cancel</button>
+              <button class="button button-primary" id="mergeSubmitButton" type="submit">Merge</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="onlineDecksView" class="view" aria-label="Online deck library">
+        <div class="library-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <div class="collection-head">
+            <h1>Online deck library</h1>
+          </div>
+          <p class="panel-intro">Find English words by topic. Datamuse finds words and MyMemory provides Ukrainian translations. Leave the search empty to see 20 random recommendations. CEFR levels are estimates based on word frequency and length, not an official classification.</p>
+          <div class="library-filters">
+            <input class="text-input" id="librarySearch" type="search" maxlength="100" placeholder="Topic in English: travel, business, technology" aria-label="Search by English topic">
+            <select class="text-input" id="libraryLevel" aria-label="CEFR level">
+              <option value="">All CEFR levels</option>
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </div>
+          <button class="button button-secondary button-small" id="refreshRecommendations" type="button">Refresh recommendations</button>
+          <div class="library-status" id="libraryStatus" role="status" aria-live="polite"></div>
+          <div class="library-results" id="libraryResults" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="studyView" class="view" aria-label="Flashcard study mode">
+        <div class="study-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <div class="study-top">
+            <span class="study-title" id="studyTitle"></span>
+            <span class="progress-label" id="studyProgress"></span>
+          </div>
+          <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="studyProgressFill"></div></div>
+          <button class="flashcard" id="flashcard" type="button" aria-label="Flip card">
+            <span class="card-label" id="cardLabel">Word</span>
+            <span class="card-word" id="cardWord"></span>
+            <span class="card-hint">Click to see the translation</span>
+          </button>
+          <div class="study-controls">
+            <button class="button button-secondary" id="previousCard" type="button">← Previous</button>
+            <button class="button button-primary" id="nextCard" type="button">Next →</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="learnView" class="view" aria-label="Learn and review mode">
+        <div class="learn-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <div class="study-top">
+            <span class="study-title" id="learnTitle"></span>
+            <span class="progress-label" id="learnQueueCount"></span>
+          </div>
+          <div class="progress-track learn-progress-track" id="learnProgressTrack" role="progressbar" aria-label="Learning progress" aria-valuemin="0" aria-valuemax="100">
+            <div class="learn-progress-segment green" id="learnProgressGreen"></div>
+            <div class="learn-progress-segment yellow" id="learnProgressYellow"></div>
+            <div class="learn-progress-segment red" id="learnProgressRed"></div>
+          </div>
+          <div class="learn-progress-legend" id="learnProgressLegend"></div>
+          <div class="learn-stats" id="learnStats"></div>
+          <div class="test-card" id="learnCard"></div>
+        </div>
+      </section>
+
+      <section id="wordListView" class="view" aria-label="Deck word list">
+        <div class="test-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <div class="collection-head">
+            <h1 id="wordListTitle">Word list</h1>
+          </div>
+          <p class="word-list-summary" id="wordListSummary"></p>
+          <div class="word-list" id="wordList"></div>
+        </div>
+      </section>
+
+      <section id="testView" class="view" aria-label="Test mode">
+        <div class="test-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <div class="study-top">
+            <span class="study-title" id="testTitle"></span>
+            <span class="progress-label" id="testProgress"></span>
+          </div>
+          <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="testProgressFill"></div></div>
+          <div class="test-card" id="testCard"></div>
+        </div>
+      </section>
+
+      <section id="testHistoryView" class="view" aria-label="Test history">
+        <div class="test-wrap">
+          <button class="back-link" type="button" data-go-home>← <span>All decks</span></button>
+          <div class="collection-head">
+            <h1>Test history</h1>
+            <span class="count" id="historyCount"></span>
+          </div>
+          <div class="history-list" id="testHistoryList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "slovnyk-sets-v1";
+      const MISSING_TRANSLATION = "[translation needed]";
+      const offlineTranslations = {
+        about: "про", again: "знову", airport: "аеропорт", animal: "тварина", answer: "відповідь",
+        apple: "яблуко", ask: "питати", baby: "немовля", back: "назад", bad: "поганий",
+        banana: "банан", beautiful: "гарний", bed: "ліжко", big: "великий", bird: "птах",
+        black: "чорний", book: "книга", boy: "хлопець", bread: "хліб", brother: "брат",
+        bus: "автобус", buy: "купувати", car: "автомобіль", cat: "кіт", chair: "стілець",
+        child: "дитина", city: "місто", clean: "чистий", close: "закривати", cold: "холодний",
+        come: "приходити", country: "країна", day: "день", different: "інший", do: "робити",
+        dog: "собака", door: "двері", drink: "пити", eat: "їсти", family: "родина",
+        father: "батько", find: "знаходити", food: "їжа", friend: "друг", girl: "дівчина",
+        give: "давати", good: "добрий", go: "йти", happy: "щасливий", have: "мати",
+        hello: "привіт", help: "допомагати", home: "дім", hot: "гарячий", house: "будинок",
+        how: "як", important: "важливий", know: "знати", learn: "вивчати", leave: "залишати",
+        like: "подобатися", live: "жити", look: "дивитися", love: "любити", man: "чоловік",
+        money: "гроші", month: "місяць", mother: "мати", name: "ім'я", new: "новий",
+        night: "ніч", no: "ні", old: "старий", one: "один", open: "відкривати",
+        parent: "батько", people: "люди", place: "місце", play: "грати", read: "читати",
+        run: "бігти", school: "школа", see: "бачити", sister: "сестра", small: "маленький",
+        speak: "говорити", student: "студент", study: "навчатися", sun: "сонце", teacher: "учитель",
+        thank: "дякувати", time: "час", today: "сьогодні", understand: "розуміти", use: "використовувати",
+        walk: "ходити", want: "хотіти", water: "вода", way: "шлях", week: "тиждень",
+        white: "білий", woman: "жінка", work: "робота", write: "писати", yes: "так",
+        yesterday: "вчора", you: "ти"
+      };
+      const onlineTopicSeeds = [
+        "travel vocabulary", "food and cooking", "business meetings", "technology", "health and medicine",
+        "animals", "weather", "education", "music", "sports", "nature", "clothing", "transport",
+        "relationships", "emotions", "the home", "city life", "science", "art", "finance",
+        "environment", "law", "history", "space", "communication", "jobs and careers",
+        "shopping", "gardening", "architecture", "photography", "geography", "literature",
+        "computer science", "marketing", "politics", "psychology", "engineering", "energy",
+        "farming", "cultural traditions", "films and theatre", "restaurants", "air travel",
+        "the ocean", "social media", "research", "cooking ingredients", "public services",
+        "daily routines", "festivals", "language learning", "economics", "news media",
+        "construction", "hospitality", "sustainability", "mathematics", "astronomy",
+        "workplace communication", "digital security", "philosophy", "emergency services"
+      ];
+      const views = [...document.querySelectorAll(".view")];
+      const deckList = document.getElementById("deckList");
+      const toast = document.getElementById("toast");
+      let sets = [];
+      let migrationNeeded = false;
+      let editingSetId = null;
+      let testHistory = [];
+      let activeSet = null;
+      let activeWords = [];
+      let cardIndex = 0;
+      let isFlipped = false;
+      let testIndex = 0;
+      let testScore = 0;
+      let testAnswered = false;
+      let testStartedAt = 0;
+      let testRunAnswers = [];
+      let testRecordSaved = false;
+      let learnLevel = 1;
+      let learnLevelOneQueue = [];
+      let learnLevelTwoQueue = [];
+      let learnCurrentWord = null;
+      let learnAnswered = false;
+      let learnRunHasAnswers = false;
+      let librarySearchTimer = null;
+      let librarySearchController = null;
+      let libraryRequestId = 0;
+      let previousRecommendationTopics = [];
+      let toastTimer;
+
+      function createId() {
+        return window.crypto && typeof window.crypto.randomUUID === "function"
+          ? window.crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function learningStats(set) {
+        const mastered = set.words.filter(word => word.learning.learn.level2Passed).length;
+        const correct = set.words.reduce((sum, word) => sum + word.learning.correctCount, 0);
+        const incorrect = set.words.reduce((sum, word) => sum + word.learning.wrongCount, 0);
+        const green = set.words.filter(word =>
+          word.learning.learn.level1FirstTry === true && word.learning.learn.level2FirstTry === true
+        ).length;
+        const yellow = set.words.filter(word =>
+          Number(word.learning.learn.level1FirstTry === true) +
+          Number(word.learning.learn.level2FirstTry === true) === 1
+        ).length;
+        const red = set.words.length - green - yellow;
+        const points = set.words.reduce((sum, word) =>
+          sum + Number(word.learning.learn.level1FirstTry === true) +
+            Number(word.learning.learn.level2FirstTry === true), 0
+        );
+        const percent = set.words.length ? Math.round((points / (set.words.length * 2)) * 100) : 0;
+        return { mastered, correct, incorrect, green, yellow, red, percent };
+      }
+
+      function wordLearnPercent(progress) {
+        return Math.round((
+          Number(progress.level1FirstTry === true) +
+          Number(progress.level2FirstTry === true)
+        ) * 50);
+      }
+
+      function normalizeLastLearnResult(result) {
+        if (!result || typeof result !== "object" || !Number.isFinite(result.completedAt) ||
+            !Number.isInteger(result.percent) || result.percent < 0 || result.percent > 100 ||
+            !Array.isArray(result.words) || result.words.some(word =>
+              !word || typeof word.id !== "string" || typeof word.term !== "string" ||
+              typeof word.translation !== "string" ||
+              ![0, 50, 100].includes(word.percent)
+            )) return null;
+        return {
+          completedAt: result.completedAt,
+          percent: result.percent,
+          words: result.words.map(word => ({
+            id: word.id,
+            term: word.term,
+            translation: word.translation,
+            percent: word.percent
+          }))
+        };
+      }
+
+      function createLearningData(legacyLevel = 0) {
+        const legacyMastered = legacyLevel >= 3;
+        return {
+          level: Math.max(0, Math.min(3, legacyLevel)),
+          dueAt: 0,
+          correctCount: 0,
+          wrongCount: 0,
+          learn: {
+            level1Passed: legacyMastered,
+            level1FirstTry: legacyMastered ? true : null,
+            level1Attempts: 0,
+            level2Passed: legacyMastered,
+            level2FirstTry: legacyMastered ? true : null,
+            level2Attempts: 0
+          }
+        };
+      }
+
+      function normalizeLearningData(word) {
+        const learning = word.learning && typeof word.learning === "object" ? word.learning : null;
+        const normalized = createLearningData(learning && Number.isInteger(learning.level) ? learning.level : 0);
+        if (learning) {
+          normalized.level = Math.max(0, Math.min(3, Number.isInteger(learning.level) ? learning.level : 0));
+          normalized.correctCount = Number.isInteger(learning.correctCount) && learning.correctCount >= 0
+            ? learning.correctCount : 0;
+          normalized.wrongCount = Number.isInteger(learning.wrongCount) && learning.wrongCount >= 0
+            ? learning.wrongCount : 0;
+          const progress = learning.learn;
+          if (progress && typeof progress === "object") {
+            normalized.learn = {
+              level1Passed: progress.level1Passed === true,
+              level1FirstTry: typeof progress.level1FirstTry === "boolean" ? progress.level1FirstTry : null,
+              level1Attempts: Number.isInteger(progress.level1Attempts) && progress.level1Attempts >= 0
+                ? progress.level1Attempts : 0,
+              level2Passed: progress.level2Passed === true,
+              level2FirstTry: typeof progress.level2FirstTry === "boolean" ? progress.level2FirstTry : null,
+              level2Attempts: Number.isInteger(progress.level2Attempts) && progress.level2Attempts >= 0
+                ? progress.level2Attempts : 0
+            };
+          }
+        }
+        return normalized;
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+      }
+
+      function sanitizeTranslation(value) {
+        if (typeof value !== "string") return "";
+        let clean = value;
+        if (typeof DOMParser !== "undefined") {
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            const document = new DOMParser().parseFromString(clean, "text/html");
+            document.querySelectorAll("script, style, iframe, object, embed, template").forEach(element => element.remove());
+            const text = document.body.textContent || "";
+            if (text === clean) break;
+            clean = text;
+          }
+        }
+        return clean
+          .replace(/<\/?[a-z][^>]*>/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function hasMissingTranslation(word) {
+        const translation = sanitizeTranslation(word.translation).toLocaleLowerCase("en-US");
+        return !translation || translation === MISSING_TRANSLATION ||
+          ["-", "—", "–"].includes(translation);
+      }
+
+      function getTranslatedWords(set) {
+        return set.words.filter(word => !hasMissingTranslation(word));
+      }
+
+      function notifySkippedWords(set, includedCount) {
+        const skipped = set.words.length - includedCount;
+        if (skipped) {
+          showToast(`${skipped} untranslated ${skipped === 1 ? "word was" : "words were"} excluded from this session.`);
+        }
+      }
+
+      function loadSets() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (!stored) return [];
+          const parsed = JSON.parse(stored);
+          if (!Array.isArray(parsed) || parsed.some(set =>
+            !set || typeof set.id !== "string" || typeof set.name !== "string" ||
+            !Array.isArray(set.words) || set.words.some(word =>
+              !word || typeof word.term !== "string" || typeof word.translation !== "string"
+            )
+          )) {
+            throw new Error("Saved decks have an invalid format.");
+          }
+          parsed.forEach(set => set.words.forEach(word => {
+            if (typeof word.id !== "string" || !word.id) {
+              word.id = createId();
+              migrationNeeded = true;
+            }
+            const cleanTranslation = sanitizeTranslation(word.translation);
+            if (cleanTranslation !== word.translation) {
+              word.translation = cleanTranslation;
+              migrationNeeded = true;
+            }
+            const previousLearning = JSON.stringify(word.learning);
+            word.learning = normalizeLearningData(word);
+            if (JSON.stringify(word.learning) !== previousLearning) {
+              migrationNeeded = true;
+            }
+          }));
+          parsed.forEach(set => {
+            const previousResult = JSON.stringify(set.lastLearnResult);
+            set.lastLearnResult = normalizeLastLearnResult(set.lastLearnResult);
+            if (set.lastLearnResult) {
+              set.lastLearnResult.words.forEach(word => {
+                word.translation = sanitizeTranslation(word.translation);
+              });
+            }
+            if (JSON.stringify(set.lastLearnResult) !== previousResult) migrationNeeded = true;
+          });
+          return parsed;
+        } catch (error) {
+          console.error("Failed to load decks:", error);
+          showToast("Could not read saved decks.");
+          return [];
+        }
+      }
+
+      function saveSets() {
+        try {
+          sets.forEach(set => set.words.forEach(word => {
+            word.translation = sanitizeTranslation(word.translation);
+          }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
+          return true;
+        } catch (error) {
+          console.error("Failed to save decks:", error);
+          showToast("Could not save. Check the available browser storage.");
+          return false;
+        }
+      }
+
+      function loadTestHistory() {
+        try {
+          const stored = localStorage.getItem("slovnyk-test-history-v1");
+          if (!stored) return [];
+          const parsed = JSON.parse(stored);
+          if (!Array.isArray(parsed) || parsed.some(test =>
+            !test || typeof test.id !== "string" || typeof test.setName !== "string" ||
+            !Number.isFinite(test.completedAt) || !Number.isFinite(test.durationMs) ||
+            !Array.isArray(test.answers) || test.answers.some(answer =>
+              !answer || typeof answer.term !== "string" || typeof answer.expected !== "string" ||
+              typeof answer.given !== "string" || typeof answer.correct !== "boolean"
+            )
+          )) throw new Error("Test history has an invalid format.");
+          parsed.forEach(test => test.answers.forEach(answer => {
+            answer.expected = sanitizeTranslation(answer.expected);
+            answer.given = sanitizeTranslation(answer.given);
+          }));
+          return parsed;
+        } catch (error) {
+          console.error("Failed to load test history:", error);
+          showToast("Could not read test history.");
+          return [];
+        }
+      }
+
+      function saveTestHistory() {
+        try {
+          testHistory.forEach(test => test.answers.forEach(answer => {
+            answer.expected = sanitizeTranslation(answer.expected);
+            answer.given = sanitizeTranslation(answer.given);
+          }));
+          localStorage.setItem("slovnyk-test-history-v1", JSON.stringify(testHistory));
+          return true;
+        } catch (error) {
+          console.error("Failed to save test history:", error);
+          showToast("Could not save test history in the browser.");
+          return false;
+        }
+      }
+
+      function recordWordAnswer(word, correct) {
+        if (correct) {
+          word.learning.correctCount += 1;
+          word.learning.level = Math.min(3, word.learning.level + 1);
+        } else {
+          word.learning.wrongCount += 1;
+          word.learning.level = Math.max(0, word.learning.level - 1);
+        }
+        word.learning.dueAt = 0;
+      }
+
+      function showView(id) {
+        views.forEach(view => view.classList.toggle("active", view.id === id));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function makeButton(text, className, action, setId) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.textContent = text;
+        button.dataset.action = action;
+        button.dataset.setId = setId;
+        return button;
+      }
+
+      function renderSets() {
+        deckList.replaceChildren();
+        const total = sets.length;
+        document.getElementById("setCount").textContent = `${total} ${total === 1 ? "deck" : "decks"}`;
+        if (!sets.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          const icon = document.createElement("div");
+          icon.className = "empty-icon";
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = "✳";
+          const title = document.createElement("h3");
+          title.textContent = "No decks yet";
+          const description = document.createElement("p");
+          description.textContent = "Create your first deck and start learning new words.";
+          const button = document.createElement("button");
+          button.className = "button button-primary";
+          button.type = "button";
+          button.textContent = "Create your first deck";
+          button.addEventListener("click", openEditor);
+          empty.append(icon, title, description, button);
+          deckList.append(empty);
+          return;
+        }
+
+        sets.forEach(set => {
+          const card = document.createElement("article");
+          card.className = "deck-card";
+          const top = document.createElement("div");
+          top.className = "deck-card-top";
+          const title = document.createElement("h3");
+          title.textContent = set.name;
+          const count = document.createElement("span");
+          count.className = "word-count";
+          count.textContent = `${set.words.length} ${set.words.length === 1 ? "word" : "words"}`;
+          top.append(title, count);
+          const preview = document.createElement("p");
+          preview.className = "deck-preview";
+          preview.textContent = set.words.slice(0, 3).map(word => word.term).join(" · ") || "No words";
+          const actions = document.createElement("div");
+          actions.className = "deck-actions";
+          actions.append(
+            makeButton("Learn", "button button-primary button-small", "learn", set.id),
+            makeButton("Word list", "button button-secondary button-small", "words", set.id),
+            makeButton("Flashcards", "button button-primary button-small", "study", set.id),
+            makeButton("Take test", "button button-secondary button-small", "test", set.id),
+            makeButton("Edit", "button button-secondary button-small", "edit", set.id),
+            makeButton("Delete", "button button-danger button-small", "delete", set.id)
+          );
+          const progress = document.createElement("div");
+          progress.className = "deck-progress";
+          const stats = learningStats(set);
+          const mastered = stats.mastered;
+          const progressTop = document.createElement("div");
+          progressTop.className = "deck-progress-top";
+          const progressLabel = document.createElement("span");
+          progressLabel.textContent = `Mastered ${mastered} of ${set.words.length}`;
+          const progressPercent = document.createElement("span");
+          progressPercent.textContent = `${stats.percent}%`;
+          const progressTrack = document.createElement("div");
+          progressTrack.className = "deck-progress-track";
+          progressTrack.setAttribute("role", "progressbar");
+          progressTrack.setAttribute("aria-label", `Words mastered in ${set.name}`);
+          progressTrack.setAttribute("aria-valuemin", "0");
+          progressTrack.setAttribute("aria-valuemax", "100");
+          progressTrack.setAttribute("aria-valuenow", String(stats.percent));
+          const progressFill = document.createElement("div");
+          progressFill.className = "deck-progress-fill";
+          progressFill.style.width = `${stats.percent}%`;
+          progressTrack.append(progressFill);
+          progressTop.append(progressLabel, progressPercent);
+          progress.append(progressTop, progressTrack);
+          const answerStats = document.createElement("p");
+          answerStats.className = "deck-answer-stats";
+          const correctCount = document.createElement("span");
+          correctCount.className = "good";
+          correctCount.textContent = `Correct: ${stats.correct}`;
+          const wrongCount = document.createElement("span");
+          wrongCount.className = "wrong";
+          wrongCount.textContent = `Incorrect: ${stats.incorrect}`;
+          answerStats.append(correctCount, document.createTextNode(" · "), wrongCount);
+          card.append(top, preview, progress, answerStats, actions);
+          deckList.append(card);
+        });
+      }
+
+      function openMergeView() {
+        const list = document.getElementById("mergeSetList");
+        list.replaceChildren();
+        document.getElementById("mergeForm").reset();
+        if (sets.length < 2) {
+          const message = document.createElement("p");
+          message.className = "merge-empty";
+          message.textContent = "Create at least two decks to merge them.";
+          list.append(message);
+          document.getElementById("mergeSubmitButton").disabled = true;
+        } else {
+          sets.forEach(set => {
+            const label = document.createElement("label");
+            label.className = "merge-set-option";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = "mergeSet";
+            checkbox.value = set.id;
+            const name = document.createElement("span");
+            name.className = "merge-set-name";
+            name.textContent = set.name;
+            const count = document.createElement("span");
+            count.className = "merge-set-count";
+            count.textContent = `${set.words.length} ${set.words.length === 1 ? "word" : "words"}`;
+            label.append(checkbox, name, count);
+            list.append(label);
+          });
+          document.getElementById("mergeSubmitButton").disabled = false;
+        }
+        showView("mergeView");
+      }
+
+      function mergeSelectedSets(event) {
+        event.preventDefault();
+        const name = document.getElementById("mergedSetName").value.trim();
+        const selectedIds = new Set(
+          [...document.querySelectorAll('input[name="mergeSet"]:checked')].map(input => input.value)
+        );
+        const selectedSets = sets.filter(set => selectedIds.has(set.id));
+        if (selectedSets.length < 2) {
+          showToast("Select at least two decks to merge.");
+          return;
+        }
+        if (!name) {
+          showToast("Enter a name for the merged deck.");
+          return;
+        }
+
+        const seenPairs = new Set();
+        const mergedWords = [];
+        selectedSets.forEach(set => set.words.forEach(word => {
+          const pairKey = `${word.term.trim().normalize("NFKC").toLocaleLowerCase("en-US")}\u0000${word.translation.trim().normalize("NFKC").toLocaleLowerCase("uk-UA")}`;
+          if (seenPairs.has(pairKey)) return;
+          seenPairs.add(pairKey);
+          mergedWords.push({
+            id: createId(),
+            term: word.term,
+            translation: word.translation,
+            learning: createLearningData()
+          });
+        }));
+        if (!mergedWords.length) {
+          showToast("The selected decks have no words to merge.");
+          return;
+        }
+
+        const mergedSet = {
+          id: createId(),
+          name,
+          words: mergedWords,
+          lastLearnResult: null
+        };
+        const previousSets = sets;
+        sets = [mergedSet, ...sets];
+        if (saveSets()) {
+          renderSets();
+          showView("homeView");
+          showToast(`Created "${name}" with ${mergedWords.length} cards.`);
+        } else {
+          sets = previousSets;
+        }
+      }
+
+      function renderOnlineDecks(forceRefresh = false) {
+        clearTimeout(librarySearchTimer);
+        libraryRequestId += 1;
+        if (librarySearchController) librarySearchController.abort();
+        librarySearchController = null;
+        const query = document.getElementById("librarySearch").value.trim();
+        const level = document.getElementById("libraryLevel").value;
+        const results = document.getElementById("libraryResults");
+        const status = document.getElementById("libraryStatus");
+        results.replaceChildren();
+        status.className = "library-status";
+        const requestId = libraryRequestId;
+        const recommendationMode = !query;
+
+        if (recommendationMode) {
+          let topics = onlineTopicSeeds.filter(topic => !previousRecommendationTopics.includes(topic));
+          if (topics.length < 20) topics = onlineTopicSeeds.slice();
+          topics = topics.sort(() => Math.random() - .5).slice(0, 20);
+          previousRecommendationTopics = topics;
+          status.classList.add("loading");
+          const spinner = document.createElement("span");
+          spinner.className = "translation-spinner";
+          spinner.setAttribute("aria-hidden", "true");
+          status.append(spinner, document.createTextNode(
+            forceRefresh ? "Refreshing random recommendations…" : "Finding 20 random recommendations…"
+          ));
+          librarySearchTimer = setTimeout(() => searchOnlineRecommendations(topics, level, requestId), 0);
+          return;
+        }
+
+        status.classList.add("loading");
+        const spinner = document.createElement("span");
+        spinner.className = "translation-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        status.append(spinner, document.createTextNode("Searching online and estimating levels…"));
+        librarySearchTimer = setTimeout(() =>
+          searchOnlineTopics([{ topic: query, label: query }], level, requestId), 450
+        );
+      }
+
+      function beginLibrarySearch(requestId, timeoutMs = 120000) {
+        const controller = new AbortController();
+        librarySearchController = controller;
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        return {
+          controller,
+          finish() {
+            clearTimeout(timeoutId);
+            if (librarySearchController === controller) librarySearchController = null;
+          }
+        };
+      }
+
+      function classifyWordLevel(item) {
+        const frequencyTag = Array.isArray(item.tags)
+          ? item.tags.find(tag => typeof tag === "string" && tag.startsWith("f:"))
+          : null;
+        const frequency = frequencyTag ? Number(frequencyTag.slice(2)) : 0;
+        const word = typeof item.word === "string" ? item.word : "";
+        const syllables = Array.isArray(item.tags)
+          ? Number((item.tags.find(tag => typeof tag === "string" && tag.startsWith("s:")) || "").slice(2)) || 0
+          : 0;
+        let score;
+        if (frequency > 0) {
+          score = frequency >= 80 ? 0 : frequency >= 40 ? 1 : frequency >= 15 ? 2 :
+            frequency >= 5 ? 3 : frequency >= 1 ? 4 : 5;
+        } else {
+          const longWord = word.replace(/[^a-z]/gi, "").length;
+          score = longWord <= 4 && syllables <= 1 ? 1 :
+            longWord <= 7 && syllables <= 2 ? 2 :
+            longWord <= 10 && syllables <= 3 ? 3 :
+            longWord <= 13 ? 4 : 5;
+        }
+        return ["A1", "A2", "B1", "B2", "C1", "C2"][Math.min(5, score)];
+      }
+
+      async function fetchTopicWords(topic, signal) {
+        const url = new URL("https://api.datamuse.com/words");
+        url.searchParams.set("ml", topic);
+        url.searchParams.set("max", "1000");
+        url.searchParams.set("md", "fs");
+        const response = await fetch(url, { headers: { Accept: "application/json" }, signal });
+        if (!response.ok) throw new Error(`Datamuse HTTP ${response.status}`);
+        const items = await response.json();
+        if (!Array.isArray(items)) throw new Error("Datamuse returned an unexpected response.");
+        const seen = new Set();
+        return items.map(item => ({
+          term: typeof item.word === "string" ? item.word.trim() : "",
+          level: classifyWordLevel(item),
+          score: Number(item.score) || 0
+        })).filter(item => /^[a-z][a-z '-]{0,38}$/i.test(item.term))
+          .filter(item => {
+            const key = item.term.toLocaleLowerCase("en-US");
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          }).sort((first, second) => second.score - first.score);
+      }
+
+      async function searchOnlineTopics(topics, selectedLevel, requestId) {
+        const { controller, finish } = beginLibrarySearch(requestId, 120000);
+        const status = document.getElementById("libraryStatus");
+        try {
+          const decks = [];
+          let nextIndex = 0;
+          const worker = async () => {
+            while (nextIndex < topics.length && requestId === libraryRequestId) {
+              const index = nextIndex;
+              nextIndex += 1;
+              const seed = topics[index];
+              try {
+                const allWords = await fetchTopicWords(seed.topic, controller.signal);
+                const levels = selectedLevel
+                  ? [selectedLevel]
+                  : ["A1", "A2", "B1", "B2", "C1", "C2"];
+                levels.forEach(level => {
+                  const words = allWords.filter(word => word.level === level).slice(0, 1000);
+                  if (words.length >= 25) {
+                    decks.push({
+                      id: `datamuse:${seed.topic.toLocaleLowerCase("en-US")}:${level}`,
+                      title: selectedLevel ? seed.label : `${seed.label} · ${level}`,
+                      topic: seed.topic,
+                      level,
+                      source: "Datamuse · estimated CEFR level by frequency and word length; translations by MyMemory",
+                      description: `A themed collection for "${seed.label}". The level is estimated from word frequency and form, not an official CEFR rating.`,
+                      candidates: words
+                    });
+                  }
+                });
+              } catch (error) {
+                if (error.name === "AbortError") throw error;
+                console.warn(`Failed to fetch recommendation "${seed.topic}":`, error);
+              }
+            }
+          };
+          await Promise.all(Array.from({ length: Math.min(4, topics.length) }, worker));
+          if (requestId !== libraryRequestId) return;
+          const found = decks.sort(() => Math.random() - .5);
+          if (!found.length) {
+            status.className = "library-status";
+            status.textContent = selectedLevel
+              ? `No decks with at least 25 ${selectedLevel}-level words found. Refresh recommendations or choose another level.`
+              : "No decks with at least 25 words found. Try refreshing recommendations.";
+            renderOnlineDeckResults([]);
+            return;
+          }
+          renderOnlineDeckResults(found);
+          status.className = "library-status";
+          status.textContent = `Found ${found.length} decks · showing up to 20 suggestions. Levels are estimates.`;
+        } catch (error) {
+          if (requestId !== libraryRequestId) return;
+          if (error.name === "AbortError") {
+            status.className = "library-status error";
+            status.textContent = "Search timed out. Check your connection and try again.";
+            return;
+          }
+          console.error("Failed to search for decks:", error);
+          status.className = "library-status error";
+          status.textContent = "Online search failed. Check your connection and try again.";
+        } finally {
+          finish();
+        }
+      }
+
+      async function translateLibraryWords(candidates, desiredCount, signal, onProgress) {
+        const pause = milliseconds => new Promise((resolve, reject) => {
+          if (signal.aborted) {
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+            return;
+          }
+          const timeoutId = setTimeout(() => {
+            signal.removeEventListener("abort", abort);
+            resolve();
+          }, milliseconds);
+          const abort = () => {
+            clearTimeout(timeoutId);
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+          };
+          signal.addEventListener("abort", abort, { once: true });
+        });
+
+        const requestJson = async url => {
+          if (signal.aborted) throw new DOMException("The operation was aborted.", "AbortError");
+          const requestController = new AbortController();
+          const abortRequest = () => requestController.abort();
+          signal.addEventListener("abort", abortRequest, { once: true });
+          const requestTimeout = setTimeout(() => requestController.abort(), 10000);
+          try {
+            const response = await fetch(url, {
+              headers: { Accept: "application/json" },
+              signal: requestController.signal
+            });
+            if (!response.ok) throw new Error(`Translation API HTTP ${response.status}`);
+            return await response.json();
+          } finally {
+            clearTimeout(requestTimeout);
+            signal.removeEventListener("abort", abortRequest);
+          }
+        };
+
+        const cleanTranslationQuery = term => {
+          let query = term.trim().replace(/\s+/g, " ")
+            .replace(/^[\s.,!?;:"“”'()[\]{}-]+|[\s.,!?;:"“”'()[\]{}-]+$/g, "");
+          const withoutLeadingArticle = query.replace(/^(?:(?:to)|(?:a|an|the))\s+/i, "");
+          if (withoutLeadingArticle) query = withoutLeadingArticle;
+          return query || term.trim();
+        };
+
+        const isUsableTranslation = (translation, sourceTerm) => {
+          const result = sanitizeTranslation(translation);
+          return result && result.toLocaleLowerCase("uk-UA") !== sourceTerm.toLocaleLowerCase("en-US")
+            ? result
+            : "";
+        };
+
+        const translateWithMyMemory = async query => {
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            const url = new URL("https://api.mymemory.translated.net/get");
+            url.searchParams.set("q", query);
+            url.searchParams.set("langpair", "en|uk");
+            try {
+              const data = await requestJson(url);
+              if (Number(data.responseStatus) !== 200) {
+                throw new Error(data.responseDetails || "MyMemory did not return a translation.");
+              }
+              const matches = Array.isArray(data.matches) ? [...data.matches].sort(
+                (first, second) => Number(second.quality || 0) - Number(first.quality || 0)
+              ) : [];
+              const options = [
+                data.responseData && data.responseData.translatedText,
+                ...matches.map(match => match.translation)
+              ];
+              for (const option of options) {
+                const translation = isUsableTranslation(option, query);
+                if (translation) return { translation, source: "MyMemory" };
+              }
+            } catch (error) {
+              if (error.name === "AbortError" && signal.aborted) throw error;
+            }
+            if (attempt === 0) await pause(250);
+          }
+          return null;
+        };
+
+        const translateWithFallback = async query => {
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            const url = new URL("https://translate.googleapis.com/translate_a/single");
+            url.searchParams.set("client", "gtx");
+            url.searchParams.set("sl", "en");
+            url.searchParams.set("tl", "uk");
+            url.searchParams.set("dt", "t");
+            url.searchParams.set("q", query);
+            try {
+              const data = await requestJson(url);
+              const segments = Array.isArray(data) && Array.isArray(data[0]) ? data[0] : [];
+              const translation = isUsableTranslation(
+                segments.map(segment => Array.isArray(segment) && typeof segment[0] === "string" ? segment[0] : "").join(""),
+                query
+              );
+              if (translation) return { translation, source: "Google Translate" };
+            } catch (error) {
+              if (error.name === "AbortError" && signal.aborted) throw error;
+            }
+            if (attempt === 0) await pause(300);
+          }
+          return null;
+        };
+
+        const translateCandidate = async candidate => {
+          const query = cleanTranslationQuery(candidate.term);
+          const primary = await translateWithMyMemory(query);
+          if (primary) return primary;
+          const fallback = await translateWithFallback(query);
+          if (fallback) return fallback;
+          const offline = offlineTranslations[query.toLocaleLowerCase("en-US")] ||
+            offlineTranslations[candidate.term.trim().toLocaleLowerCase("en-US")];
+          return offline ? { translation: offline, source: "offline dictionary" } : null;
+        };
+
+        const words = [];
+        let failed = 0;
+        let translatedCount = 0;
+        let fallbackCount = 0;
+        let offlineCount = 0;
+        const batchSize = 5;
+        for (let offset = 0; offset < Math.min(desiredCount, candidates.length); offset += batchSize) {
+          const batch = candidates.slice(offset, offset + batchSize);
+          const translations = await Promise.all(batch.map(async candidate => {
+            try {
+              return await translateCandidate(candidate);
+            } catch (error) {
+              if (error.name === "AbortError" && signal.aborted) throw error;
+              console.warn(`Translation failed for "${candidate.term}":`, error);
+              return null;
+            }
+          }));
+          batch.forEach((candidate, index) => {
+            const result = translations[index];
+            if (result) {
+              translatedCount += 1;
+              if (result.source === "Google Translate") fallbackCount += 1;
+              if (result.source === "offline dictionary") offlineCount += 1;
+              words.push({
+                term: candidate.term,
+                translation: sanitizeTranslation(result.translation) || MISSING_TRANSLATION,
+                level: candidate.level
+              });
+            } else {
+              failed += 1;
+              console.warn(`Could not translate "${candidate.term}" using online or offline sources; marking it for manual translation.`);
+              words.push({ term: candidate.term, translation: MISSING_TRANSLATION, level: candidate.level });
+            }
+          });
+          onProgress(translatedCount, words.length, failed, fallbackCount, offlineCount);
+          if (offset + batchSize < Math.min(desiredCount, candidates.length)) {
+            await pause(100);
+          }
+        }
+        return { words, failed, fallbackCount, offlineCount };
+      }
+
+      function renderOnlineDeckResults(decks) {
+        const results = document.getElementById("libraryResults");
+        results.replaceChildren();
+        if (!decks.length) {
+          const empty = document.createElement("div");
+          empty.className = "library-empty";
+          empty.textContent = "No decks found. Try changing your search or CEFR level.";
+          results.append(empty);
+          return;
+        }
+        decks.slice(0, 20).forEach(deck => {
+          const card = document.createElement("article");
+          card.className = "library-card";
+          const top = document.createElement("div");
+          top.className = "library-card-top";
+          const title = document.createElement("h2");
+          title.textContent = deck.title;
+          const levelBadge = document.createElement("span");
+          levelBadge.className = "library-level";
+          levelBadge.textContent = deck.level;
+          top.append(title, levelBadge);
+          const description = document.createElement("p");
+          description.className = "library-description";
+          description.textContent = deck.description;
+          const count = document.createElement("p");
+          count.className = "library-card-count";
+          count.textContent = `${deck.candidates.length} words available · up to ${Math.min(1000, deck.candidates.length)} will be added`;
+          const preview = document.createElement("p");
+          preview.className = "library-preview";
+          preview.textContent = deck.candidates.slice(0, 5).map(word => word.term).join(" · ") +
+            (deck.candidates.length > 5 ? " …" : "");
+          const previewButton = document.createElement("button");
+          previewButton.className = "button button-secondary button-small library-word-toggle";
+          previewButton.type = "button";
+          previewButton.textContent = "Preview words";
+          previewButton.setAttribute("aria-expanded", "false");
+          const wordList = document.createElement("div");
+          wordList.className = "library-word-list";
+          wordList.hidden = true;
+          deck.candidates.forEach(word => {
+            const item = document.createElement("div");
+            item.className = "library-word-list-item";
+            const term = document.createElement("span");
+            term.textContent = word.term;
+            const wordLevel = document.createElement("span");
+            wordLevel.className = "library-word-level";
+            wordLevel.textContent = word.level;
+            item.append(term, wordLevel);
+            wordList.append(item);
+          });
+          previewButton.addEventListener("click", () => {
+            wordList.hidden = !wordList.hidden;
+            previewButton.textContent = wordList.hidden ? "Preview words" : "Hide words";
+            previewButton.setAttribute("aria-expanded", String(!wordList.hidden));
+          });
+          const source = document.createElement("p");
+          source.className = "library-source";
+          source.textContent = `Source: ${deck.source}`;
+          const add = document.createElement("button");
+          add.className = "button button-primary button-small";
+          add.type = "button";
+          add.dataset.action = "import";
+          const alreadyAdded = sets.some(set =>
+            set.onlineTopicId === deck.id || set.catalogId === deck.id
+          );
+          add.textContent = alreadyAdded ? "Already in my decks" : "Add to my decks";
+          add.disabled = alreadyAdded;
+          add.addEventListener("click", () => addOnlineDeck(deck, add));
+          card.append(top, description, count, preview, previewButton, wordList, source, add);
+          results.append(card);
+        });
+      }
+
+      async function addOnlineDeck(deck, button) {
+        if (sets.some(set => set.onlineTopicId === deck.id || set.catalogId === deck.id)) {
+          button.disabled = true;
+          return;
+        }
+        const desiredCount = Math.min(1000, deck.candidates.length);
+
+        const requestId = libraryRequestId;
+        const status = document.getElementById("libraryStatus");
+        button.disabled = true;
+        button.textContent = "Preparing deck…";
+        status.className = "library-status loading";
+        status.replaceChildren();
+        const spinner = document.createElement("span");
+        spinner.className = "translation-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        status.append(spinner, document.createTextNode(`Translated 0 of ${desiredCount} words…`));
+        const { controller, finish } = beginLibrarySearch(requestId, 1800000);
+        try {
+          const translated = await translateLibraryWords(
+            deck.candidates.slice(0, Math.min(1000, deck.candidates.length)),
+            desiredCount,
+            controller.signal,
+            (completed, processed, failed, fallbackCount, offlineCount) => {
+              if (requestId === libraryRequestId) {
+                status.lastChild.textContent =
+                  `Processed ${processed}/${desiredCount} · translated ${completed}` +
+                  (fallbackCount ? ` · fallback ${fallbackCount}` : "") +
+                  (offlineCount ? ` · offline ${offlineCount}` : "") +
+                  (failed ? ` · needs manual translation ${failed}` : "");
+              }
+            }
+          );
+          if (requestId !== libraryRequestId) return;
+          const fingerprint = translated.words.map(word =>
+            `${word.term.trim().toLocaleLowerCase("en-US")}\u0000${word.translation.trim().toLocaleLowerCase("uk-UA")}`
+          ).sort().join("\u0001");
+          const catalogId = `datamuse:${hashOnlineDeck(fingerprint)}`;
+          if (sets.some(set => set.catalogId === catalogId)) {
+            status.className = "library-status";
+            status.textContent = "This deck is already in your collection.";
+            button.textContent = "Already in my decks";
+            button.disabled = true;
+            return;
+          }
+          const importedSet = {
+            id: createId(),
+            catalogId,
+            onlineTopicId: deck.id,
+            name: `${deck.title} (${deck.level}, ${translated.words.length} words)`,
+            words: translated.words.map(word => ({
+              id: createId(),
+              term: word.term,
+              translation: word.translation,
+              learning: createLearningData()
+            })),
+            lastLearnResult: null
+          };
+          const previousSets = sets;
+          sets = [importedSet, ...sets];
+          if (!saveSets()) {
+            sets = previousSets;
+            button.disabled = false;
+            button.textContent = "Add to my decks";
+            return;
+          }
+          status.className = "library-status";
+          const translationSources = [
+            translated.fallbackCount ? `${translated.fallbackCount} via fallback API` : "",
+            translated.offlineCount ? `${translated.offlineCount} via offline dictionary` : ""
+          ].filter(Boolean).join(" · ");
+          const manualTranslationNote = translated.failed
+            ? ` ${translated.failed} ${translated.failed === 1 ? "word needs" : "words need"} a Ukrainian translation. Edit the deck to complete them.`
+            : "";
+          status.textContent =
+            `Added ${translated.words.length} words to "${importedSet.name}".` +
+            (translationSources ? ` ${translationSources}.` : "") + manualTranslationNote;
+          button.textContent = "Added to my decks";
+          button.disabled = true;
+        } catch (error) {
+          if (error.name === "AbortError") {
+            status.className = "library-status error";
+            status.textContent = "Translation was cancelled or timed out. Please try again.";
+          } else {
+            console.error("Failed to create online deck:", error);
+            status.className = "library-status error";
+            status.textContent = error.message || "Could not create the deck. Please try again.";
+          }
+          button.disabled = false;
+          button.textContent = "Try again";
+        } finally {
+          finish();
+        }
+      }
+
+      function hashOnlineDeck(value) {
+        let hash = 2166136261;
+        for (let index = 0; index < value.length; index += 1) {
+          hash ^= value.charCodeAt(index);
+          hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(16);
+      }
+
+      function searchOnlineRecommendations(topics, level, requestId) {
+        searchOnlineTopics(topics.map(topic => ({ topic, label: topic.replace(/\b\w/g, letter => letter.toLocaleUpperCase("en-US")) })), level, requestId);
+      }
+
+      function openEditor(set = null) {
+        if (!set || typeof set.id !== "string" || !Array.isArray(set.words)) set = null;
+        editingSetId = set ? set.id : null;
+        document.getElementById("setForm").reset();
+        document.getElementById("editorTitle").textContent = set ? "Edit deck" : "New deck";
+        document.getElementById("saveSetButton").textContent = set ? "Save changes" : "Save deck";
+        document.getElementById("setName").value = set ? set.name : "";
+        const rows = document.getElementById("wordRows");
+        rows.replaceChildren();
+        if (set) {
+          set.words.forEach(word => addWordRow(word));
+        } else {
+          addWordRow();
+          addWordRow();
+        }
+        showView("editorView");
+        document.getElementById("setName").focus();
+      }
+
+      function addWordRow(word = null) {
+        const row = document.createElement("div");
+        row.className = "word-row";
+        if (word && typeof word.id === "string") row.dataset.wordId = word.id;
+        const term = document.createElement("input");
+        term.className = "text-input";
+        term.name = "term";
+        term.maxLength = 120;
+        term.placeholder = "Word or phrase";
+        term.setAttribute("aria-label", "Word or phrase");
+        term.required = true;
+        term.value = word ? word.term : "";
+        const translationField = document.createElement("div");
+        translationField.className = "translation-field";
+        const translation = document.createElement("input");
+        translation.className = "text-input";
+        translation.name = "translation";
+        translation.maxLength = 120;
+        translation.placeholder = "Ukrainian translation";
+        translation.setAttribute("aria-label", "Ukrainian translation");
+        translation.required = true;
+        translation.value = word ? sanitizeTranslation(word.translation) : "";
+        const suggestions = document.createElement("div");
+        suggestions.className = "translation-suggestions";
+        suggestions.id = `suggestions-${createId()}`;
+        suggestions.setAttribute("role", "listbox");
+        suggestions.setAttribute("aria-label", "Translation suggestions");
+        suggestions.hidden = true;
+        const help = document.createElement("p");
+        help.className = "translation-help";
+        help.setAttribute("aria-live", "polite");
+        const loading = document.createElement("div");
+        loading.className = "translation-loading";
+        loading.setAttribute("role", "status");
+        loading.setAttribute("aria-live", "polite");
+        const spinner = document.createElement("span");
+        spinner.className = "translation-spinner";
+        spinner.setAttribute("aria-hidden", "true");
+        const loadingLabel = document.createElement("span");
+        loadingLabel.textContent = "Looking up translation online…";
+        loading.append(spinner, loadingLabel);
+        const lookup = { timer: null, controller: null, requestId: 0 };
+        let lastTerm = term.value;
+        term.setAttribute("aria-controls", suggestions.id);
+        term.setAttribute("aria-expanded", "false");
+        term.addEventListener("input", () => {
+          if (lastTerm.trim().toLocaleLowerCase("en-US") !== term.value.trim().toLocaleLowerCase("en-US")) {
+            translation.value = "";
+          }
+          lastTerm = term.value;
+          scheduleTranslationLookup(term, translation, suggestions, help, loading, lookup);
+          sortEditorWordRows();
+        });
+        translation.addEventListener("input", () => {
+          clearTimeout(lookup.timer);
+          lookup.requestId += 1;
+          if (lookup.controller) lookup.controller.abort();
+          lookup.controller = null;
+          suggestions.hidden = true;
+          help.classList.remove("visible");
+          loading.classList.remove("visible");
+          term.setAttribute("aria-expanded", "false");
+          sortEditorWordRows();
+        });
+        translationField.append(translation, suggestions, loading, help);
+        const remove = document.createElement("button");
+        remove.className = "remove-word";
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.setAttribute("aria-label", "Remove word pair");
+        remove.addEventListener("click", () => {
+          if (document.querySelectorAll(".word-row").length <= 1) {
+            showToast("A deck must contain at least one word pair.");
+            return;
+          }
+          clearTimeout(lookup.timer);
+          lookup.requestId += 1;
+          if (lookup.controller) lookup.controller.abort();
+          row.remove();
+        });
+        row.append(term, translationField, remove);
+        document.getElementById("wordRows").append(row);
+        sortEditorWordRows();
+      }
+
+      function scheduleTranslationLookup(term, translation, suggestions, help, loading, lookup) {
+        clearTimeout(lookup.timer);
+        lookup.requestId += 1;
+        if (lookup.controller) lookup.controller.abort();
+        lookup.controller = null;
+        suggestions.replaceChildren();
+        suggestions.hidden = true;
+        help.classList.remove("visible");
+        loading.classList.remove("visible");
+        term.setAttribute("aria-expanded", "false");
+
+        const query = term.value.trim();
+        if (!query) return;
+        if (!/^[a-z][a-z\s'-]*$/i.test(query)) {
+          help.textContent = "Enter an English word or phrase to find a translation.";
+          help.classList.add("visible");
+          return;
+        }
+        if (query.length < 2) return;
+
+        loading.classList.add("visible");
+        lookup.timer = setTimeout(() => {
+          requestTranslation(query, term, translation, suggestions, help, loading, lookup);
+        }, 350);
+      }
+
+      async function requestTranslation(query, term, translation, suggestions, help, loading, lookup) {
+        const requestId = lookup.requestId;
+        const controller = new AbortController();
+        let timedOut = false;
+        const timeoutId = setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, 10000);
+        lookup.controller = controller;
+        const url = new URL("https://api.mymemory.translated.net/get");
+        url.searchParams.set("q", query);
+        url.searchParams.set("langpair", "en|uk");
+
+        try {
+          const response = await fetch(url, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            signal: controller.signal
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if (requestId !== lookup.requestId || !term.isConnected) return;
+          if (data.responseStatus && Number(data.responseStatus) !== 200) {
+            throw new Error(data.responseDetails || `API status ${data.responseStatus}`);
+          }
+
+          const matches = Array.isArray(data.matches) ? [...data.matches] : [];
+          matches.sort((first, second) => Number(second.quality || 0) - Number(first.quality || 0));
+          const translations = [
+            data.responseData && data.responseData.translatedText,
+            ...matches.map(match => match.translation)
+          ].filter(value => typeof value === "string")
+          .map(sanitizeTranslation)
+            .filter(value => value && value.toLocaleLowerCase("uk-UA") !== query.toLocaleLowerCase("en-US"))
+            .filter((value, index, list) => list.findIndex(item =>
+              item.toLocaleLowerCase("uk-UA") === value.toLocaleLowerCase("uk-UA")
+            ) === index)
+            .slice(0, 5);
+
+          if (!translations.length) {
+            help.textContent = "No translation found. Enter your own translation.";
+            help.classList.add("visible");
+            return;
+          }
+          renderTranslationOptions(translations, term, translation, suggestions, help, loading, lookup);
+        } catch (error) {
+          if (requestId !== lookup.requestId) return;
+          if (error.name === "AbortError" && !timedOut) return;
+          console.error("Failed to fetch translation:", error);
+          help.textContent = timedOut
+            ? "The translation service timed out. Try again or enter a translation manually."
+            : error instanceof TypeError
+              ? "Could not load the translation. Check your internet connection and try again."
+              : "The translation service is temporarily unavailable. Try again or enter a translation manually.";
+          help.classList.add("visible");
+        } finally {
+          clearTimeout(timeoutId);
+          if (requestId === lookup.requestId) {
+            loading.classList.remove("visible");
+            lookup.controller = null;
+          }
+        }
+      }
+
+      function renderTranslationOptions(options, term, translation, suggestions, help, loading, lookup) {
+        suggestions.replaceChildren();
+        options.map(sanitizeTranslation).filter(Boolean).forEach(value => {
+          const option = document.createElement("button");
+          option.className = "translation-suggestion";
+          option.type = "button";
+          option.setAttribute("role", "option");
+          option.textContent = value;
+          option.addEventListener("click", () => {
+            clearTimeout(lookup.timer);
+            lookup.requestId += 1;
+            if (lookup.controller) lookup.controller.abort();
+            lookup.controller = null;
+            translation.value = sanitizeTranslation(value);
+            sortEditorWordRows();
+            suggestions.hidden = true;
+            help.classList.remove("visible");
+            loading.classList.remove("visible");
+            term.setAttribute("aria-expanded", "false");
+            translation.focus();
+          });
+          suggestions.append(option);
+        });
+        help.classList.remove("visible");
+        loading.classList.remove("visible");
+        suggestions.hidden = false;
+        term.setAttribute("aria-expanded", "true");
+      }
+
+      function sortEditorWordRows() {
+        const container = document.getElementById("wordRows");
+        const rows = [...container.querySelectorAll(".word-row")];
+        rows
+          .map((row, index) => ({
+            row,
+            index,
+            missing: hasMissingTranslation({
+              translation: row.querySelector('[name="translation"]').value
+            })
+          }))
+          .sort((first, second) =>
+            Number(!first.missing) - Number(!second.missing) || first.index - second.index
+          )
+          .forEach(item => container.append(item.row));
+      }
+
+      function startStudy(set) {
+        activeWords = getTranslatedWords(set);
+        if (!activeWords.length) {
+          showToast("Add at least one Ukrainian translation before starting flashcards.");
+          return;
+        }
+        notifySkippedWords(set, activeWords.length);
+        activeSet = set;
+        cardIndex = 0;
+        isFlipped = false;
+        document.getElementById("studyTitle").textContent = set.name;
+        showView("studyView");
+        renderStudyCard();
+      }
+
+      function renderStudyCard() {
+        const word = activeWords[cardIndex];
+        document.getElementById("cardWord").textContent = isFlipped ? word.translation : word.term;
+        document.getElementById("cardLabel").textContent = isFlipped ? "Translation" : "Word";
+        document.getElementById("flashcard").classList.toggle("is-flipped", isFlipped);
+        document.getElementById("studyProgress").textContent = `${cardIndex + 1} / ${activeWords.length}`;
+        document.getElementById("studyProgressFill").style.width = `${((cardIndex + 1) / activeWords.length) * 100}%`;
+        document.getElementById("previousCard").disabled = cardIndex === 0;
+        document.getElementById("nextCard").disabled = cardIndex === activeWords.length - 1;
+      }
+
+      function startLearn(set) {
+        activeWords = getTranslatedWords(set);
+        if (!activeWords.length) {
+          showToast("Add at least one Ukrainian translation before starting Learn.");
+          return;
+        }
+        notifySkippedWords(set, activeWords.length);
+        activeSet = set;
+        learnLevel = 1;
+        learnRunHasAnswers = false;
+        learnLevelOneQueue = activeWords
+          .filter(word => !word.learning.learn.level1Passed)
+          .map(word => word.id);
+        learnLevelTwoQueue = [];
+        learnCurrentWord = null;
+        learnAnswered = false;
+        document.getElementById("learnTitle").textContent = set.name;
+        showView("learnView");
+        renderLearnQuestion();
+      }
+
+      function updateLearnProgress() {
+        const stats = learningStats({ ...activeSet, words: activeWords });
+        const total = activeWords.length;
+        document.getElementById("learnStats").textContent =
+          `Mastery ${stats.percent}% · Fully learned ${stats.mastered} of ${total} · Correct answers ${stats.correct} · Incorrect ${stats.incorrect}`;
+        document.getElementById("learnProgressGreen").style.width = `${(stats.green / total) * 100}%`;
+        document.getElementById("learnProgressYellow").style.width = `${(stats.yellow / total) * 100}%`;
+        document.getElementById("learnProgressRed").style.width = `${(stats.red / total) * 100}%`;
+        const progressTrack = document.getElementById("learnProgressTrack");
+        progressTrack.setAttribute("aria-valuenow", String(stats.percent));
+        progressTrack.setAttribute(
+          "aria-valuetext",
+          `${stats.percent}% mastered; green ${stats.green}, yellow ${stats.yellow}, red ${stats.red} words`
+        );
+        document.getElementById("learnProgressLegend").textContent =
+          `Green — ${stats.green} · Yellow — ${stats.yellow} · Red — ${stats.red}`;
+      }
+
+      function buildLearnOptions(word) {
+        const normalize = value => value.trim().toLocaleLowerCase("uk-UA");
+        const correct = word.translation;
+        const distractors = sets.flatMap(set => set.words)
+          .filter(candidate => candidate.id !== word.id && !hasMissingTranslation(candidate))
+          .map(candidate => candidate.translation)
+          .filter((translation, index, list) =>
+            normalize(translation) !== normalize(correct) &&
+            list.findIndex(item => normalize(item) === normalize(translation)) === index
+          )
+          .sort(() => Math.random() - .5)
+          .slice(0, 3);
+        for (let index = 1; distractors.length < 3; index += 1) {
+          const fallback = `Other option ${index}`;
+          if (normalize(fallback) !== normalize(correct) &&
+              !distractors.some(value => normalize(value) === normalize(fallback))) {
+            distractors.push(fallback);
+          }
+        }
+        return [correct, ...distractors].sort(() => Math.random() - .5);
+      }
+
+      function renderWordList(set) {
+        const snapshot = set.lastLearnResult;
+        const sortedWords = [...set.words].sort((first, second) =>
+          Number(hasMissingTranslation(second)) - Number(hasMissingTranslation(first))
+        );
+        document.getElementById("wordListTitle").textContent = `Word list · ${set.name}`;
+        document.getElementById("wordListSummary").textContent = snapshot
+          ? `Last completed Learn session: ${new Date(snapshot.completedAt).toLocaleString("en-US")} · Overall mastery ${snapshot.percent}%.`
+          : "Learn has not been completed yet. Showing current words without a previous session result.";
+
+        const list = document.getElementById("wordList");
+        list.replaceChildren();
+        const savedWords = new Map((snapshot ? snapshot.words : []).map(word => [word.id, word]));
+        sortedWords.forEach(word => {
+          const previous = savedWords.get(word.id);
+          const percent = previous ? previous.percent : 0;
+          const missingTranslation = hasMissingTranslation(word);
+          const status = missingTranslation ? "needs-translation" :
+            percent === 100 ? "mastered" : percent === 50 ? "partial" : "unlearned";
+          const entry = document.createElement("article");
+          entry.className = "word-list-entry";
+          const text = document.createElement("div");
+          const term = document.createElement("div");
+          term.className = "word-list-term";
+          term.textContent = previous ? previous.term : word.term;
+          const translation = document.createElement("div");
+          translation.className = "word-list-translation";
+          translation.textContent = previous ? previous.translation : word.translation;
+          if (hasMissingTranslation(word)) {
+            entry.classList.add("word-list-entry-missing");
+            translation.setAttribute("aria-label", "Translation needed");
+          }
+          text.append(term, translation);
+          const score = document.createElement("span");
+          score.className = `word-list-score ${status}`;
+          score.textContent = missingTranslation ? "Needs translation" : `${percent}%`;
+          const track = document.createElement("div");
+          track.className = "word-list-track";
+          track.setAttribute("role", "progressbar");
+          track.setAttribute(
+            "aria-label",
+            missingTranslation ? `Translation needed for ${term.textContent}` : `Mastery of ${term.textContent}`
+          );
+          track.setAttribute("aria-valuemin", "0");
+          track.setAttribute("aria-valuemax", "100");
+          track.setAttribute("aria-valuenow", String(percent));
+          const fill = document.createElement("div");
+          fill.className = `word-list-fill ${missingTranslation ? "unlearned" : status}`;
+          fill.style.width = `${missingTranslation ? 0 : percent}%`;
+          track.append(fill);
+          entry.append(text, score, track);
+          list.append(entry);
+        });
+      }
+
+      function renderLearnQuestion() {
+        updateLearnProgress();
+        const container = document.getElementById("learnCard");
+        container.replaceChildren();
+
+        if (learnLevel === 1 && !learnLevelOneQueue.length) {
+          learnLevel = 2;
+          learnLevelTwoQueue = activeWords
+            .filter(word => !word.learning.learn.level2Passed)
+            .map(word => word.id);
+        }
+
+        const queue = learnLevel === 1 ? learnLevelOneQueue : learnLevelTwoQueue;
+        if (!queue.length) {
+          learnCurrentWord = null;
+          if (learnRunHasAnswers) {
+            const stats = learningStats({ ...activeSet, words: activeWords });
+            activeSet.lastLearnResult = {
+              completedAt: Date.now(),
+              percent: stats.percent,
+              words: activeWords.map(word => ({
+                id: word.id,
+                term: word.term,
+                translation: word.translation,
+                percent: wordLearnPercent(word.learning.learn)
+              }))
+            };
+            saveSets();
+            learnRunHasAnswers = false;
+          }
+          document.getElementById("learnQueueCount").textContent = "All levels completed";
+          const stats = learningStats({ ...activeSet, words: activeWords });
+          const result = document.createElement("div");
+          result.className = "result learn-result";
+          const mark = document.createElement("div");
+          mark.className = "result-mark";
+          mark.textContent = "🎉";
+          const title = document.createElement("h2");
+          title.textContent = "All translated words learned!";
+          const summary = document.createElement("p");
+          summary.textContent = `Both levels completed for all ${activeWords.length} translated words. First-try mastery across the deck: ${stats.percent}%.`;
+          const dueNote = document.createElement("p");
+          dueNote.className = "next-review";
+          dueNote.textContent = `Correct answers: ${stats.correct} · Incorrect answers: ${stats.incorrect}.`;
+          const home = document.createElement("button");
+          home.className = "button button-primary";
+          home.type = "button";
+          home.textContent = "Back to decks";
+          home.addEventListener("click", () => {
+            renderSets();
+            showView("homeView");
+          });
+          result.append(mark, title, summary, dueNote, home);
+          container.append(result);
+          return;
+        }
+
+        const nextWordId = queue.shift();
+        learnCurrentWord = activeWords.find(word => word.id === nextWordId);
+        if (!learnCurrentWord) {
+          showToast("Could not find the word to review.");
+          renderLearnQuestion();
+          return;
+        }
+        learnAnswered = false;
+        const progress = learnCurrentWord.learning.learn;
+        const attempts = learnLevel === 1 ? progress.level1Attempts : progress.level2Attempts;
+        document.getElementById("learnQueueCount").textContent =
+          `Level ${learnLevel} · ${queue.length + 1} remaining`;
+        const stage = document.createElement("div");
+        stage.className = "learn-stage-label";
+        stage.textContent = learnLevel === 1 ? "Level 1 of 2 · Choose the translation" : "Level 2 of 2 · Ukrainian → English";
+        const label = document.createElement("div");
+        label.className = "question-label";
+        label.textContent = learnLevel === 1 ? "Choose the translation" : "Type the English word";
+        const question = document.createElement("h2");
+        question.className = "learn-question";
+        question.textContent = learnLevel === 1 ? learnCurrentWord.term : learnCurrentWord.translation;
+        const attemptLabel = document.createElement("p");
+        attemptLabel.className = "next-review";
+        attemptLabel.textContent = attempts === 0 ? "First attempt" : `Attempt ${attempts + 1}`;
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        feedback.setAttribute("aria-live", "polite");
+        const nextButton = document.createElement("button");
+        nextButton.className = "button button-primary";
+        nextButton.type = "button";
+        nextButton.textContent = "Continue →";
+        nextButton.hidden = true;
+        nextButton.addEventListener("click", renderLearnQuestion);
+        const footer = document.createElement("div");
+        footer.className = "test-footer";
+        footer.append(document.createElement("span"), nextButton);
+
+        if (learnLevel === 1) {
+          const answers = document.createElement("div");
+          answers.className = "answers";
+          buildLearnOptions(learnCurrentWord).forEach(answer => {
+            const option = document.createElement("button");
+            option.type = "button";
+            option.className = "answer-option";
+            option.textContent = answer;
+            option.addEventListener("click", () => submitLearnAnswer(answer, feedback, nextButton, answers));
+            answers.append(option);
+          });
+          container.append(stage, label, question, attemptLabel, answers, feedback, footer);
+        } else {
+          const form = document.createElement("form");
+          form.className = "learn-input-form";
+          const input = document.createElement("input");
+          input.className = "text-input";
+          input.type = "text";
+          input.maxLength = 120;
+          input.autocomplete = "off";
+          input.placeholder = "Type the English word";
+          input.setAttribute("aria-label", "English answer");
+          input.required = true;
+          const check = document.createElement("button");
+          check.className = "button button-primary";
+          check.type = "submit";
+          check.textContent = "Check";
+          form.append(input, check);
+          form.addEventListener("submit", event => {
+            event.preventDefault();
+            submitLearnAnswer(input.value, feedback, nextButton);
+            input.disabled = true;
+            check.disabled = true;
+          });
+          container.append(stage, label, question, attemptLabel, form, feedback, footer);
+          input.focus();
+        }
+      }
+
+      function submitLearnAnswer(answer, feedback, nextButton, answers) {
+        if (learnAnswered) return;
+        learnAnswered = true;
+        const normalize = value => value.trim().normalize("NFKC").toLocaleLowerCase("uk-UA");
+        const word = learnCurrentWord;
+        const correctAnswer = learnLevel === 1 ? word.translation : word.term;
+        const correct = normalize(answer) === normalize(correctAnswer);
+        const progress = word.learning.learn;
+        const attemptsKey = learnLevel === 1 ? "level1Attempts" : "level2Attempts";
+        const passedKey = learnLevel === 1 ? "level1Passed" : "level2Passed";
+        const firstTryKey = learnLevel === 1 ? "level1FirstTry" : "level2FirstTry";
+        const firstAttempt = progress[attemptsKey] === 0;
+        progress[attemptsKey] += 1;
+        if (answers) {
+          [...answers.children].forEach(option => {
+            option.disabled = true;
+            if (option.textContent === correctAnswer) option.classList.add("correct");
+          });
+        }
+        recordWordAnswer(word, correct);
+        learnRunHasAnswers = true;
+        if (correct) {
+          progress[passedKey] = true;
+          progress[firstTryKey] = firstAttempt;
+          feedback.textContent = learnLevel === 1
+            ? "Correct! Level 1 completed."
+            : "Correct! Word fully learned.";
+          feedback.classList.add("good");
+        } else {
+          progress[firstTryKey] = false;
+          (learnLevel === 1 ? learnLevelOneQueue : learnLevelTwoQueue).push(word.id);
+          if (answers) {
+            [...answers.children].forEach(option => {
+              if (option.textContent === answer) option.classList.add("incorrect");
+            });
+          }
+          feedback.textContent = `Incorrect — this word will return at the end of this level's queue. Correct answer: ${correctAnswer}`;
+          feedback.classList.add("bad");
+        }
+        updateLearnProgress();
+        nextButton.hidden = false;
+        saveSets();
+      }
+
+      function startTest(set) {
+        activeWords = getTranslatedWords(set);
+        if (!activeWords.length) {
+          showToast("Add at least one Ukrainian translation before starting a test.");
+          return;
+        }
+        notifySkippedWords(set, activeWords.length);
+        activeSet = set;
+        testIndex = 0;
+        testScore = 0;
+        testAnswered = false;
+        testStartedAt = Date.now();
+        testRunAnswers = [];
+        testRecordSaved = false;
+        document.getElementById("testTitle").textContent = set.name;
+        showView("testView");
+        renderQuestion();
+      }
+
+      function formatDuration(durationMs) {
+        const totalSeconds = Math.max(0, Math.floor(durationMs / 1000));
+        if (totalSeconds === 0) return "less than 1 sec";
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return minutes ? `${minutes} min ${seconds} sec` : `${seconds} sec`;
+      }
+
+      function saveCompletedTest() {
+        if (testRecordSaved) return;
+        testRecordSaved = true;
+        const record = {
+          id: createId(),
+          setId: activeSet.id,
+          setName: activeSet.name,
+          startedAt: testStartedAt,
+          completedAt: Date.now(),
+          durationMs: Date.now() - testStartedAt,
+          correct: testScore,
+          total: testRunAnswers.length,
+          answers: testRunAnswers
+        };
+        testHistory.unshift(record);
+        saveTestHistory();
+      }
+
+      function renderTestHistory() {
+        const list = document.getElementById("testHistoryList");
+        list.replaceChildren();
+        document.getElementById("historyCount").textContent =
+          `${testHistory.length} ${testHistory.length === 1 ? "test" : "tests"}`;
+        if (!testHistory.length) {
+          const empty = document.createElement("div");
+          empty.className = "history-empty";
+          empty.textContent = "Completed tests will appear here with their date, duration, and answer-by-answer review.";
+          list.append(empty);
+          return;
+        }
+
+        [...testHistory].sort((first, second) => second.completedAt - first.completedAt).forEach(test => {
+          const entry = document.createElement("div");
+          entry.className = "history-entry";
+          const entryHead = document.createElement("div");
+          entryHead.className = "history-entry-head";
+          const details = document.createElement("details");
+          details.className = "history-entry-details";
+          const summary = document.createElement("summary");
+          const meta = document.createElement("div");
+          const title = document.createElement("div");
+          title.className = "history-entry-title";
+          title.textContent = test.setName;
+          const date = document.createElement("div");
+          date.className = "history-entry-meta";
+          date.textContent = `${new Date(test.completedAt).toLocaleString("en-US")} · ${formatDuration(test.durationMs)}`;
+          meta.append(title, date);
+          const score = document.createElement("span");
+          score.className = "history-result";
+          score.textContent = `${test.correct} / ${test.total}`;
+          const summaryHead = document.createElement("div");
+          summaryHead.className = "history-entry-head";
+          summaryHead.append(meta, score);
+          summary.append(summaryHead);
+          const remove = document.createElement("button");
+          remove.className = "button button-danger button-small history-delete";
+          remove.type = "button";
+          remove.textContent = "Delete";
+          remove.dataset.testId = test.id;
+          remove.setAttribute("aria-label", `Delete test result for "${test.setName}"`);
+          details.append(summary);
+          entryHead.append(details, remove);
+          const answers = document.createElement("div");
+          answers.className = "history-answer-list";
+          test.answers.forEach((answer, index) => {
+            const row = document.createElement("div");
+            row.className = `history-answer ${answer.correct ? "correct" : "incorrect"}`;
+            const question = document.createElement("strong");
+            question.textContent = `${index + 1}. ${answer.term}`;
+            const detail = document.createElement("span");
+            detail.textContent = answer.correct
+              ? `Correct: ${answer.expected}`
+              : `Your answer: ${answer.given || "not provided"} · Correct: ${answer.expected}`;
+            row.append(question, detail);
+            answers.append(row);
+          });
+          details.append(answers);
+          entry.append(entryHead);
+          list.append(entry);
+        });
+      }
+
+      function deleteTestHistoryEntry(testId) {
+        if (!window.confirm("Are you sure you want to delete this result from history?")) return;
+        const previousHistory = testHistory;
+        testHistory = testHistory.filter(test => test.id !== testId);
+        if (testHistory.length === previousHistory.length) return;
+        if (saveTestHistory()) {
+          renderTestHistory();
+          showToast("Test result deleted from history.");
+        } else {
+          testHistory = previousHistory;
+        }
+      }
+
+      function importWordsFromText() {
+        const textarea = document.getElementById("bulkWords");
+        const lines = textarea.value.split(/\r?\n/);
+        const words = [];
+        const invalidLines = [];
+        lines.forEach((line, index) => {
+          if (!line.trim()) return;
+          const pair = line.split(/ {3,}/);
+          if (pair.length !== 2 || !pair[0].trim() || !pair[1].trim()) {
+            invalidLines.push(index + 1);
+            return;
+          }
+          words.push({ term: pair[0].trim(), translation: pair[1].trim() });
+        });
+
+        if (!lines.some(line => line.trim())) {
+          showToast("Paste words and translations separated by three spaces.");
+          return;
+        }
+        if (invalidLines.length) {
+          showToast(`Check lines ${invalidLines.join(", ")}: separate each word and translation with three spaces.`);
+          return;
+        }
+
+        const emptyRows = [...document.querySelectorAll(".word-row")].filter(row =>
+          !row.querySelector('[name="term"]').value.trim() &&
+          !row.querySelector('[name="translation"]').value.trim()
+        );
+        emptyRows.forEach(row => row.remove());
+        words.forEach(word => addWordRow(word));
+        textarea.value = "";
+        showToast(`Imported ${words.length} cards.`);
+      }
+
+      function renderQuestion() {
+        const total = activeWords.length;
+        document.getElementById("testProgress").textContent = `${Math.min(testIndex + 1, total)} / ${total}`;
+        document.getElementById("testProgressFill").style.width = `${(testIndex / total) * 100}%`;
+        const container = document.getElementById("testCard");
+        container.replaceChildren();
+        if (testIndex >= total) {
+          saveCompletedTest();
+          document.getElementById("testProgress").textContent = `${total} / ${total}`;
+          document.getElementById("testProgressFill").style.width = "100%";
+          const result = document.createElement("div");
+          result.className = "result";
+          const mark = document.createElement("div");
+          mark.className = "result-mark";
+          mark.textContent = testScore === total ? "🎉" : "✨";
+          const title = document.createElement("h2");
+          title.textContent = "Test complete!";
+          const summary = document.createElement("p");
+          summary.textContent = `Correct: ${testScore} · Incorrect: ${total - testScore} · Duration: ${formatDuration(Date.now() - testStartedAt)}.`;
+          const retry = document.createElement("button");
+          retry.className = "button button-primary";
+          retry.type = "button";
+          retry.textContent = "Try again";
+          retry.addEventListener("click", () => startTest(activeSet));
+          const historyButton = document.createElement("button");
+          historyButton.className = "button button-secondary";
+          historyButton.type = "button";
+          historyButton.textContent = "View test history";
+          historyButton.addEventListener("click", () => {
+            renderTestHistory();
+            showView("testHistoryView");
+          });
+          result.append(mark, title, summary, retry, historyButton);
+          container.append(result);
+          return;
+        }
+
+        const current = activeWords[testIndex];
+        const label = document.createElement("div");
+        label.className = "question-label";
+        label.textContent = "Choose the translation";
+        const question = document.createElement("h2");
+        question.className = "question";
+        question.textContent = current.term;
+        const answers = document.createElement("div");
+        answers.className = "answers";
+        const distractors = activeWords
+          .filter((_, index) => index !== testIndex)
+          .map(word => word.translation)
+          .filter((translation, index, list) => translation !== current.translation && list.indexOf(translation) === index);
+        const options = [current.translation, ...distractors.sort(() => Math.random() - .5).slice(0, 3)]
+          .sort(() => Math.random() - .5);
+        options.forEach(option => {
+          const answer = document.createElement("button");
+          answer.type = "button";
+          answer.className = "answer-option";
+          answer.textContent = option;
+          answer.addEventListener("click", () => selectAnswer(answer, option, current, answers, feedback, nextButton));
+          answers.append(answer);
+        });
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        feedback.setAttribute("aria-live", "polite");
+        const footer = document.createElement("div");
+        footer.className = "test-footer";
+        const score = document.createElement("span");
+        score.className = "score";
+        score.textContent = `Correct: ${testScore}`;
+        const nextButton = document.createElement("button");
+        nextButton.className = "button button-primary";
+        nextButton.type = "button";
+        nextButton.textContent = testIndex === total - 1 ? "Results →" : "Next →";
+        nextButton.disabled = true;
+        nextButton.addEventListener("click", () => {
+          testIndex += 1;
+          testAnswered = false;
+          renderQuestion();
+        });
+        footer.append(score, nextButton);
+        container.append(label, question, answers, feedback, footer);
+      }
+
+      function selectAnswer(button, selected, word, answers, feedback, nextButton) {
+        if (testAnswered) return;
+        testAnswered = true;
+        const correct = word.translation;
+        const isCorrect = selected === correct;
+        [...answers.children].forEach(option => {
+          option.disabled = true;
+          if (option.textContent === correct) option.classList.add("correct");
+        });
+        if (isCorrect) {
+          testScore += 1;
+          feedback.textContent = "Correct! Keep it up.";
+          feedback.classList.add("good");
+        } else {
+          button.classList.add("incorrect");
+          feedback.textContent = `Correct answer: ${correct}`;
+          feedback.classList.add("bad");
+        }
+        testRunAnswers.push({
+          term: word.term,
+          expected: correct,
+          given: selected,
+          correct: isCorrect
+        });
+        recordWordAnswer(word, isCorrect);
+        saveSets();
+        document.querySelector(".score").textContent = `Correct: ${testScore}`;
+        nextButton.disabled = false;
+      }
+
+      document.getElementById("createButton").addEventListener("click", openEditor);
+      document.getElementById("mergeDecksButton").addEventListener("click", openMergeView);
+      document.getElementById("mergeForm").addEventListener("submit", mergeSelectedSets);
+      document.getElementById("onlineDecksButton").addEventListener("click", () => {
+        document.getElementById("librarySearch").value = "";
+        document.getElementById("libraryLevel").value = "";
+        renderOnlineDecks();
+        showView("onlineDecksView");
+      });
+      document.getElementById("librarySearch").addEventListener("input", renderOnlineDecks);
+      document.getElementById("libraryLevel").addEventListener("change", renderOnlineDecks);
+      document.getElementById("refreshRecommendations").addEventListener("click", () => {
+        document.getElementById("librarySearch").value = "";
+        renderOnlineDecks(true);
+      });
+      document.getElementById("testHistoryButton").addEventListener("click", () => {
+        renderTestHistory();
+        showView("testHistoryView");
+      });
+      document.getElementById("addWordButton").addEventListener("click", addWordRow);
+      document.getElementById("importWordsButton").addEventListener("click", importWordsFromText);
+      document.getElementById("testHistoryList").addEventListener("click", event => {
+        const button = event.target.closest("button[data-test-id]");
+        if (button) deleteTestHistoryEntry(button.dataset.testId);
+      });
+      document.getElementById("homeLink").addEventListener("click", event => {
+        event.preventDefault();
+        renderSets();
+        showView("homeView");
+      });
+      document.querySelectorAll("[data-go-home]").forEach(button => button.addEventListener("click", () => {
+        renderSets();
+        showView("homeView");
+      }));
+      deckList.addEventListener("click", event => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const set = sets.find(item => item.id === button.dataset.setId);
+        if (!set) return;
+        if (button.dataset.action === "learn") startLearn(set);
+        if (button.dataset.action === "words") {
+          renderWordList(set);
+          showView("wordListView");
+        }
+        if (button.dataset.action === "study") startStudy(set);
+        if (button.dataset.action === "test") startTest(set);
+        if (button.dataset.action === "edit") openEditor(set);
+        if (button.dataset.action === "delete" && window.confirm(`Delete the "${set.name}" deck?`)) {
+          const previous = sets;
+          sets = sets.filter(item => item.id !== set.id);
+          if (saveSets()) renderSets();
+          else sets = previous;
+        }
+      });
+      document.getElementById("setForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const name = document.getElementById("setName").value.trim();
+        const previousSet = sets.find(item => item.id === editingSetId);
+        const words = [...document.querySelectorAll(".word-row")].map(row => {
+          const term = row.querySelector('[name="term"]').value.trim();
+          const translation = sanitizeTranslation(row.querySelector('[name="translation"]').value);
+          const previousWord = previousSet && previousSet.words.find(word => word.id === row.dataset.wordId);
+          const unchanged = previousWord && previousWord.term === term && previousWord.translation === translation;
+          return {
+            id: previousWord ? previousWord.id : createId(),
+            term,
+            translation,
+            learning: unchanged ? previousWord.learning : createLearningData()
+          };
+        });
+        if (!name || words.some(word => !word.term || !word.translation)) {
+          showToast("Enter a deck name, a word, and a translation for every pair.");
+          return;
+        }
+        const set = {
+          id: previousSet ? previousSet.id : createId(),
+          name,
+          words,
+          lastLearnResult: previousSet ? previousSet.lastLearnResult : null
+        };
+        const previousSets = sets;
+        sets = previousSet
+          ? sets.map(item => item.id === set.id ? set : item)
+          : [set, ...sets];
+        if (saveSets()) {
+          renderSets();
+          showView("homeView");
+          editingSetId = null;
+          showToast(previousSet ? "Changes saved!" : "Deck saved!");
+        } else {
+          sets = previousSets;
+        }
+      });
+      document.getElementById("flashcard").addEventListener("click", () => {
+        isFlipped = !isFlipped;
+        renderStudyCard();
+      });
+      document.getElementById("previousCard").addEventListener("click", () => {
+        if (cardIndex > 0) {
+          cardIndex -= 1;
+          isFlipped = false;
+          renderStudyCard();
+        }
+      });
+      document.getElementById("nextCard").addEventListener("click", () => {
+        if (cardIndex < activeWords.length - 1) {
+          cardIndex += 1;
+          isFlipped = false;
+          renderStudyCard();
+        }
+      });
+
+      sets = loadSets();
+      if (migrationNeeded) saveSets();
+      testHistory = loadTestHistory();
+      renderSets();
+    })();
+  </script>
+</body>
+</html>
