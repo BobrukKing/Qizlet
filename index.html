@@ -117,13 +117,7 @@
     .word-list-fill.unlearned { background: #dd626b; }
     .learn-stats { display: flex; justify-content: space-between; gap: 12px; margin: 0 0 20px; color: var(--muted); font-size: 14px; }
     .learn-stats strong { color: var(--ink); }
-    .learn-progress-track { display: flex; height: 12px; overflow: hidden; border-radius: 10px; background: #f0c7ca; }
-    .learn-progress-segment { height: 100%; transition: width .35s ease; }
-    .learn-progress-segment.green { background: #28a66a; }
-    .learn-progress-segment.yellow { background: #e8b83e; }
-    .learn-progress-segment.red { background: #dd626b; }
-    .learn-progress-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: -10px 0 20px; color: var(--muted); font-size: 12px; }
-    .learn-progress-legend strong { color: var(--ink); }
+    .learn-progress-track { height: 12px; }
     .learn-stage-label { margin-bottom: 8px; color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
     .learn-question { min-width: 0; margin: 0; font-size: clamp(24px, 4vw, 32px); line-height: 1.2; overflow-wrap: anywhere; }
     .learn-question-line { justify-content: flex-start; margin: 9px 0 8px; }
@@ -475,12 +469,9 @@
             <span class="study-title" id="learnTitle"></span>
             <span class="progress-label" id="learnQueueCount"></span>
           </div>
-          <div class="progress-track learn-progress-track" id="learnProgressTrack" role="progressbar" aria-label="Learning progress" aria-valuemin="0" aria-valuemax="100">
-            <div class="learn-progress-segment green" id="learnProgressGreen"></div>
-            <div class="learn-progress-segment yellow" id="learnProgressYellow"></div>
-            <div class="learn-progress-segment red" id="learnProgressRed"></div>
+          <div class="progress-track learn-progress-track" id="learnProgressTrack" role="progressbar" aria-label="Current session progress" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="learnSessionProgressFill"></div>
           </div>
-          <div class="learn-progress-legend" id="learnProgressLegend"></div>
           <div class="learn-stats" id="learnStats"></div>
           <div class="test-card" id="learnCard"></div>
         </div>
@@ -593,6 +584,8 @@
       let learnCurrentWord = null;
       let learnAnswered = false;
       let learnRunHasAnswers = false;
+      let learnSessionCompleted = 0;
+      let learnSessionTotal = 0;
       let librarySearchTimer = null;
       let librarySearchController = null;
       let libraryRequestId = 0;
@@ -606,30 +599,26 @@
       }
 
       function learningStats(set) {
-        const mastered = set.words.filter(word => word.learning.learn.level2Passed).length;
         const correct = set.words.reduce((sum, word) => sum + word.learning.correctCount, 0);
         const incorrect = set.words.reduce((sum, word) => sum + word.learning.wrongCount, 0);
-        const green = set.words.filter(word =>
-          word.learning.learn.level1FirstTry === true && word.learning.learn.level2FirstTry === true
-        ).length;
-        const yellow = set.words.filter(word =>
-          Number(word.learning.learn.level1FirstTry === true) +
-          Number(word.learning.learn.level2FirstTry === true) === 1
-        ).length;
+        const wordPercents = set.words.map(word => wordLearnPercent(word.learning.learn));
+        const mastered = wordPercents.filter(percent => percent === 100).length;
+        const green = wordPercents.filter(percent => percent === 100).length;
+        const yellow = wordPercents.filter(percent => percent > 0 && percent < 100).length;
         const red = set.words.length - green - yellow;
-        const points = set.words.reduce((sum, word) =>
-          sum + Number(word.learning.learn.level1FirstTry === true) +
-            Number(word.learning.learn.level2FirstTry === true), 0
-        );
-        const percent = set.words.length ? Math.round((points / (set.words.length * 2)) * 100) : 0;
+        const points = wordPercents.reduce((sum, percent) => sum + percent, 0);
+        const percent = set.words.length ? Math.round(points / set.words.length) : 0;
         return { mastered, correct, incorrect, green, yellow, red, percent };
       }
 
       function wordLearnPercent(progress) {
-        return Math.round((
-          Number(progress.level1FirstTry === true) +
-          Number(progress.level2FirstTry === true)
-        ) * 50);
+        const level1Points = progress.level1Passed
+          ? Math.max(0, 30 - progress.level1Mistakes * 10)
+          : 0;
+        const level2Points = progress.level2Passed
+          ? Math.max(0, 70 - progress.level2Mistakes * 20)
+          : 0;
+        return level1Points + level2Points;
       }
 
       function normalizeLastLearnResult(result) {
@@ -638,7 +627,7 @@
             !Array.isArray(result.words) || result.words.some(word =>
               !word || typeof word.id !== "string" || typeof word.term !== "string" ||
               typeof word.translation !== "string" ||
-              ![0, 50, 100].includes(word.percent)
+              !Number.isInteger(word.percent) || word.percent < 0 || word.percent > 100
             )) return null;
         return {
           completedAt: result.completedAt,
@@ -663,9 +652,11 @@
             level1Passed: legacyMastered,
             level1FirstTry: legacyMastered ? true : null,
             level1Attempts: 0,
+            level1Mistakes: 0,
             level2Passed: legacyMastered,
             level2FirstTry: legacyMastered ? true : null,
-            level2Attempts: 0
+            level2Attempts: 0,
+            level2Mistakes: 0
           }
         };
       }
@@ -686,10 +677,14 @@
               level1FirstTry: typeof progress.level1FirstTry === "boolean" ? progress.level1FirstTry : null,
               level1Attempts: Number.isInteger(progress.level1Attempts) && progress.level1Attempts >= 0
                 ? progress.level1Attempts : 0,
+              level1Mistakes: Number.isInteger(progress.level1Mistakes) && progress.level1Mistakes >= 0
+                ? progress.level1Mistakes : progress.level1FirstTry === false ? 1 : 0,
               level2Passed: progress.level2Passed === true,
               level2FirstTry: typeof progress.level2FirstTry === "boolean" ? progress.level2FirstTry : null,
               level2Attempts: Number.isInteger(progress.level2Attempts) && progress.level2Attempts >= 0
-                ? progress.level2Attempts : 0
+                ? progress.level2Attempts : 0,
+              level2Mistakes: Number.isInteger(progress.level2Mistakes) && progress.level2Mistakes >= 0
+                ? progress.level2Mistakes : progress.level2FirstTry === false ? 1 : 0
             };
           }
         }
@@ -1849,7 +1844,7 @@
           return;
         }
         notifySkippedWords(set, activeWords.length);
-        shuffleStudyWords();
+        shuffleWords(activeWords);
         activeSet = set;
         cardIndex = 0;
         isFlipped = false;
@@ -1858,10 +1853,10 @@
         renderStudyCard();
       }
 
-      function shuffleStudyWords() {
-        for (let index = activeWords.length - 1; index > 0; index -= 1) {
+      function shuffleWords(items) {
+        for (let index = items.length - 1; index > 0; index -= 1) {
           const randomIndex = Math.floor(Math.random() * (index + 1));
-          [activeWords[index], activeWords[randomIndex]] = [activeWords[randomIndex], activeWords[index]];
+          [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
         }
       }
 
@@ -1893,7 +1888,10 @@
         activeSet = set;
         learnLevel = 1;
         learnRunHasAnswers = false;
+        learnSessionCompleted = 0;
+        learnSessionTotal = activeWords.length * 2;
         learnLevelOneQueue = activeWords.map(word => word.id);
+        shuffleWords(learnLevelOneQueue);
         learnLevelTwoQueue = [];
         learnCurrentWord = null;
         learnAnswered = false;
@@ -1905,19 +1903,15 @@
       function updateLearnProgress() {
         const stats = learningStats({ ...activeSet, words: activeWords });
         const total = activeWords.length;
+        const sessionPercent = learnSessionTotal
+          ? Math.round((learnSessionCompleted / learnSessionTotal) * 100)
+          : 0;
         document.getElementById("learnStats").textContent =
           `Mastery ${stats.percent}% · Fully learned ${stats.mastered} of ${total} · Correct answers ${stats.correct} · Incorrect ${stats.incorrect}`;
-        document.getElementById("learnProgressGreen").style.width = `${(stats.green / total) * 100}%`;
-        document.getElementById("learnProgressYellow").style.width = `${(stats.yellow / total) * 100}%`;
-        document.getElementById("learnProgressRed").style.width = `${(stats.red / total) * 100}%`;
+        document.getElementById("learnSessionProgressFill").style.width = `${sessionPercent}%`;
         const progressTrack = document.getElementById("learnProgressTrack");
-        progressTrack.setAttribute("aria-valuenow", String(stats.percent));
-        progressTrack.setAttribute(
-          "aria-valuetext",
-          `${stats.percent}% mastered; green ${stats.green}, yellow ${stats.yellow}, red ${stats.red} words`
-        );
-        document.getElementById("learnProgressLegend").textContent =
-          `Green — ${stats.green} · Yellow — ${stats.yellow} · Red — ${stats.red}`;
+        progressTrack.setAttribute("aria-valuenow", String(sessionPercent));
+        progressTrack.setAttribute("aria-valuetext", `${learnSessionCompleted} of ${learnSessionTotal} correct answers in this session`);
       }
 
       function buildLearnOptions(word) {
@@ -1965,32 +1959,32 @@
 
       function renderWordList(set) {
         const snapshot = set.lastLearnResult;
+        const currentProgress = learningStats(set).percent;
         const sortedWords = [...set.words].sort((first, second) =>
-          Number(hasMissingTranslation(second)) - Number(hasMissingTranslation(first))
+          Number(hasMissingTranslation(second)) - Number(hasMissingTranslation(first)) ||
+          wordLearnPercent(first.learning.learn) - wordLearnPercent(second.learning.learn)
         );
         document.getElementById("wordListTitle").textContent = `Word list · ${set.name}`;
         document.getElementById("wordListSummary").textContent = snapshot
-          ? `Last completed Learn session: ${new Date(snapshot.completedAt).toLocaleString("en-US")} · Overall mastery ${snapshot.percent}%.`
+          ? `Last completed Learn session: ${new Date(snapshot.completedAt).toLocaleString("en-US")} · Current progress ${currentProgress}%.`
           : "Learn has not been completed yet. Showing current words without a previous session result.";
 
         const list = document.getElementById("wordList");
         list.replaceChildren();
-        const savedWords = new Map((snapshot ? snapshot.words : []).map(word => [word.id, word]));
         sortedWords.forEach(word => {
-          const previous = savedWords.get(word.id);
-          const percent = previous ? previous.percent : 0;
+          const percent = wordLearnPercent(word.learning.learn);
           const missingTranslation = hasMissingTranslation(word);
           const status = missingTranslation ? "needs-translation" :
-            percent === 100 ? "mastered" : percent === 50 ? "partial" : "unlearned";
+            percent === 100 ? "mastered" : percent > 0 ? "partial" : "unlearned";
           const entry = document.createElement("article");
           entry.className = "word-list-entry";
           const text = document.createElement("div");
           const term = document.createElement("div");
           term.className = "word-list-term";
-          term.textContent = previous ? previous.term : word.term;
+          term.textContent = word.term;
           const translation = document.createElement("div");
           translation.className = "word-list-translation";
-          translation.textContent = previous ? previous.translation : word.translation;
+          translation.textContent = word.translation;
           if (hasMissingTranslation(word)) {
             entry.classList.add("word-list-entry-missing");
             translation.setAttribute("aria-label", "Translation needed");
@@ -2026,6 +2020,7 @@
         if (learnLevel === 1 && !learnLevelOneQueue.length) {
           learnLevel = 2;
           learnLevelTwoQueue = activeWords.map(word => word.id);
+          shuffleWords(learnLevelTwoQueue);
         }
 
         const queue = learnLevel === 1 ? learnLevelOneQueue : learnLevelTwoQueue;
@@ -2165,10 +2160,12 @@
         const correct = normalize(answer) === normalize(correctAnswer);
         const progress = word.learning.learn;
         const attemptsKey = learnLevel === 1 ? "level1Attempts" : "level2Attempts";
+        const mistakesKey = learnLevel === 1 ? "level1Mistakes" : "level2Mistakes";
         const passedKey = learnLevel === 1 ? "level1Passed" : "level2Passed";
         const firstTryKey = learnLevel === 1 ? "level1FirstTry" : "level2FirstTry";
         const firstAttempt = progress[attemptsKey] === 0;
         progress[attemptsKey] += 1;
+        if (!correct) progress[mistakesKey] += 1;
         if (answers) {
           [...answers.children].forEach(option => {
             option.disabled = true;
@@ -2178,6 +2175,7 @@
         recordWordAnswer(word, correct);
         learnRunHasAnswers = true;
         if (correct) {
+          learnSessionCompleted += 1;
           progress[passedKey] = true;
           if (progress[firstTryKey] === null) {
             progress[firstTryKey] = firstAttempt;
@@ -2211,6 +2209,7 @@
           return;
         }
         notifySkippedWords(set, activeWords.length);
+        shuffleWords(activeWords);
         activeSet = set;
         testIndex = 0;
         testScore = 0;
