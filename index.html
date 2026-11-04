@@ -16,6 +16,7 @@
       --purple: #6754e8;
       --purple-dark: #5542d2;
       --purple-soft: #f0edff;
+      --purple-rgb: 103, 84, 232;
       --green: #17865b;
       --red: #c83d54;
       --shadow: 0 18px 50px rgba(34, 39, 70, .08);
@@ -31,8 +32,8 @@
     }
     button, input { font: inherit; }
     button { cursor: pointer; }
-    button:focus-visible, input:focus-visible {
-      outline: 3px solid rgba(103, 84, 232, .3);
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(var(--purple-rgb), .3);
       outline-offset: 2px;
     }
     .app-shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; }
@@ -46,8 +47,15 @@
     .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
     .brand-mark {
       width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px;
-      color: white; background: linear-gradient(135deg, #8978ff, #5d49dd);
-      box-shadow: 0 6px 15px rgba(103, 84, 232, .25);
+      color: white; background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      box-shadow: 0 6px 15px rgba(var(--purple-rgb), .25);
+    }
+    .header-brand-group { display: flex; align-items: center; }
+    .theme-picker-wrap { display: flex; align-items: center; gap: 12px; }
+    .theme-picker-label { color: var(--muted); font-size: 13px; }
+    .theme-picker {
+      min-height: 38px; padding: 0 30px 0 10px; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--paper); color: var(--ink); font: inherit; font-size: 13px;
     }
     .header-note { color: var(--muted); font-size: 14px; }
     main { padding: 48px 0 72px; }
@@ -62,13 +70,15 @@
       transition: transform .15s, background .15s, box-shadow .15s;
     }
     .button:hover { transform: translateY(-1px); }
-    .button-primary { background: var(--purple); color: white; box-shadow: 0 7px 16px rgba(103, 84, 232, .2); }
+    .button-primary { background: var(--purple); color: var(--primary-foreground, white); box-shadow: 0 7px 16px rgba(var(--purple-rgb), .2); }
     .button-primary:hover { background: var(--purple-dark); }
     .button-secondary { background: white; border-color: var(--line); color: var(--ink); }
     .button-quiet { background: transparent; color: var(--muted); border-color: var(--line); }
-    .button-danger { color: var(--red); background: #fff5f6; border-color: #ffe2e6; }
+    .button-danger { color: #000; background: var(--red); border-color: var(--red); }
+    .button-danger:hover { background: #b83245; border-color: #b83245; }
     .button-small { min-height: 37px; padding: 0 12px; border-radius: 10px; font-size: 14px; }
     .button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    .button[hidden] { display: none; }
     .collection-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
     .collection-head h2 { margin: 0; font-size: 18px; letter-spacing: -.35px; }
     .count { color: var(--muted); font-size: 14px; }
@@ -115,7 +125,8 @@
     .learn-progress-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: -10px 0 20px; color: var(--muted); font-size: 12px; }
     .learn-progress-legend strong { color: var(--ink); }
     .learn-stage-label { margin-bottom: 8px; color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
-    .learn-question { margin: 9px 0 8px; font-size: clamp(24px, 4vw, 32px); line-height: 1.2; overflow-wrap: anywhere; }
+    .learn-question { min-width: 0; margin: 0; font-size: clamp(24px, 4vw, 32px); line-height: 1.2; overflow-wrap: anywhere; }
+    .learn-question-line { justify-content: flex-start; margin: 9px 0 8px; }
     .learn-status { margin-bottom: 20px; }
     .learn-input-form { display: flex; gap: 9px; }
     .learn-input-form .text-input { flex: 1; }
@@ -176,7 +187,7 @@
     .bulk-import-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 750; }
     .bulk-import-help { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
     .bulk-import textarea { width: 100%; min-height: 100px; padding: 11px 12px; resize: vertical; color: var(--ink); border: 1px solid #dfe1ea; border-radius: 10px; font: inherit; }
-    .bulk-import textarea:focus { outline: 3px solid rgba(111, 92, 238, .15); border-color: var(--purple); }
+    .bulk-import textarea:focus { outline: 3px solid rgba(var(--purple-rgb), .15); border-color: var(--purple); }
     .bulk-import .button { margin-top: 10px; }
     .merge-wrap { width: min(720px, 100%); margin: 0 auto; }
     .merge-set-list { display: grid; gap: 10px; margin: 18px 0 24px; }
@@ -224,11 +235,20 @@
     .card-label { margin-bottom: 14px; color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
     .card-word { max-width: 100%; font-size: clamp(26px, 5vw, 40px); font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
     .card-hint { margin-top: 20px; color: #969bad; font-size: 13px; }
+    .pronunciation-line { display: flex; align-items: center; justify-content: center; gap: 9px; min-width: 0; }
+    .pronunciation-button {
+      width: 34px; min-width: 34px; height: 34px; min-height: 34px; flex: 0 0 34px;
+      padding: 0; border-radius: 50%; font-size: 16px;
+    }
+    .card-word-line { max-width: 100%; }
+    .card-word-line .card-word { min-width: 0; }
     .study-controls { display: flex; justify-content: center; gap: 12px; margin-top: 19px; }
     .study-controls .button { min-width: 145px; }
     .test-card { padding: 28px; background: white; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
     .question-label { color: var(--purple); font-size: 12px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; }
     .question { margin: 10px 0 23px; font-size: clamp(24px, 4vw, 32px); line-height: 1.2; overflow-wrap: anywhere; }
+    .question-line { margin: 10px 0 23px; }
+    .question-line .question { min-width: 0; margin: 0; }
     .answers { display: grid; gap: 10px; }
     .answer-option {
       width: 100%; min-height: 52px; padding: 12px 15px; text-align: left; color: var(--ink); background: white;
@@ -273,6 +293,9 @@
       .app-shell { width: min(100% - 28px, 540px); }
       header { height: 66px; }
       .header-note { display: none; }
+      .header-brand-group { gap: 8px; }
+      .theme-picker-label { display: none; }
+      .theme-picker { min-height: 36px; }
       main { padding: 32px 0 54px; }
       .hero { align-items: start; flex-direction: column; margin-bottom: 27px; }
       .hero-actions { display: grid; width: 100%; grid-template-columns: 1fr; }
@@ -295,15 +318,41 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
     }
+    body[data-theme="orange"] { --purple: #c54b00; --purple-dark: #963900; --purple-soft: #fff0e8; --purple-rgb: 197, 75, 0; --primary-foreground: white; }
+    body[data-theme="green"] { --purple: #287a35; --purple-dark: #1c5d27; --purple-soft: #eaf5ec; --purple-rgb: 40, 122, 53; --primary-foreground: white; }
+    body[data-theme="black"] { --purple: #292929; --purple-dark: #111; --purple-soft: #ededed; --purple-rgb: 41, 41, 41; --primary-foreground: white; }
+    body[data-theme="blue"] { --purple: #2257b8; --purple-dark: #17438f; --purple-soft: #eaf0fc; --purple-rgb: 34, 87, 184; --primary-foreground: white; }
+    body[data-theme="light-blue"] { --purple: #087caa; --purple-dark: #056183; --purple-soft: #e7f6fc; --purple-rgb: 8, 124, 170; --primary-foreground: white; }
+    body[data-theme="pink"] { --purple: #c52e78; --purple-dark: #98205b; --purple-soft: #fcebf3; --purple-rgb: 197, 46, 120; --primary-foreground: white; }
+    body[data-theme="ruby"] { --purple: #b21f3d; --purple-dark: #85152d; --purple-soft: #fbe9ed; --purple-rgb: 178, 31, 61; --primary-foreground: white; }
+    body[data-theme="yellow"] { --purple: #c58f00; --purple-dark: #987000; --purple-soft: #fff7da; --purple-rgb: 197, 143, 0; --primary-foreground: white; }
+    body[data-theme="emerald"] { --purple: #00846a; --purple-dark: #006651; --purple-soft: #e5f5f1; --purple-rgb: 0, 132, 106; --primary-foreground: white; }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <header>
-      <a class="brand" href="#" id="homeLink" aria-label="Dictionary — home">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <span>dictionary</span>
-      </a>
+      <div class="header-brand-group">
+        <a class="brand" href="#" id="homeLink" aria-label="Dictionary — home">
+          <span class="brand-mark" aria-hidden="true">S</span>
+          <span>Dictionary</span>
+        </a>
+      </div>
+      <label class="theme-picker-wrap">
+        <span class="theme-picker-label">Theme</span>
+        <select class="theme-picker" id="themePicker" aria-label="Interface color">
+          <option value="purple">Purple</option>
+          <option value="orange">Orange</option>
+          <option value="green">Green</option>
+          <option value="black">Black</option>
+          <option value="blue">Blue</option>
+          <option value="light-blue">Light blue</option>
+          <option value="pink">Pink</option>
+          <option value="ruby">Ruby</option>
+          <option value="yellow">Yellow</option>
+          <option value="emerald">Emerald</option>
+        </select>
+      </label>
     </header>
 
     <main>
@@ -340,8 +389,8 @@
             </div>
             <div class="bulk-import">
               <label class="bulk-import-label" for="bulkWords">Bulk add words</label>
-              <p class="bulk-import-help">One card per line. Separate the English word and Ukrainian translation with three spaces.</p>
-              <textarea id="bulkWords" placeholder="apple   яблуко&#10;banana   банан" spellcheck="false"></textarea>
+              <p class="bulk-import-help">One card per line. Add an optional Ukrainian translation after three spaces.</p>
+              <textarea id="bulkWords" placeholder="apple   яблуко&#10;banana" spellcheck="false"></textarea>
               <button class="button button-secondary button-small" id="importWordsButton" type="button">Import words</button>
             </div>
             <div id="wordRows"></div>
@@ -403,14 +452,18 @@
             <span class="progress-label" id="studyProgress"></span>
           </div>
           <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="studyProgressFill"></div></div>
-          <button class="flashcard" id="flashcard" type="button" aria-label="Flip card">
+          <div class="flashcard" id="flashcard" role="group" tabindex="0" aria-label="Flashcard. Press Enter or Space to flip.">
             <span class="card-label" id="cardLabel">Word</span>
-            <span class="card-word" id="cardWord"></span>
+            <span class="pronunciation-line card-word-line">
+              <span class="card-word" id="cardWord"></span>
+              <button class="button button-secondary pronunciation-button" id="studyPronunciation" type="button" aria-label="Listen to the English pronunciation">🔊</button>
+            </span>
             <span class="card-hint">Click to see the translation</span>
-          </button>
+          </div>
           <div class="study-controls">
             <button class="button button-secondary" id="previousCard" type="button">← Previous</button>
             <button class="button button-primary" id="nextCard" type="button">Next →</button>
+            <button class="button button-secondary" id="exitStudy" type="button" hidden>Exit</button>
           </div>
         </div>
       </section>
@@ -475,7 +528,11 @@
       "use strict";
 
       const STORAGE_KEY = "slovnyk-sets-v1";
-      const MISSING_TRANSLATION = "[translation needed]";
+      const MISSING_TRANSLATION = "Translation needed";
+      const THEME_STORAGE_KEY = "slovnyk-theme-v1";
+      const THEMES = new Set([
+        "purple", "orange", "green", "black", "blue", "light-blue", "pink", "ruby", "yellow", "emerald"
+      ]);
       const offlineTranslations = {
         about: "про", again: "знову", airport: "аеропорт", animal: "тварина", answer: "відповідь",
         apple: "яблуко", ask: "питати", baby: "немовля", back: "назад", bad: "поганий",
@@ -646,6 +703,26 @@
         toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
       }
 
+      function applyTheme(theme) {
+        const selectedTheme = THEMES.has(theme) ? theme : "purple";
+        document.getElementById("themePicker").value = selectedTheme;
+        if (selectedTheme === "purple") {
+          document.body.removeAttribute("data-theme");
+        } else {
+          document.body.dataset.theme = selectedTheme;
+        }
+        return selectedTheme;
+      }
+
+      function loadTheme() {
+        try {
+          return applyTheme(localStorage.getItem(THEME_STORAGE_KEY) || "purple");
+        } catch (error) {
+          console.error("Failed to load theme:", error);
+          return applyTheme("purple");
+        }
+      }
+
       function sanitizeTranslation(value) {
         if (typeof value !== "string") return "";
         let clean = value;
@@ -666,7 +743,7 @@
 
       function hasMissingTranslation(word) {
         const translation = sanitizeTranslation(word.translation).toLocaleLowerCase("en-US");
-        return !translation || translation === MISSING_TRANSLATION ||
+        return !translation || translation === MISSING_TRANSLATION.toLocaleLowerCase("en-US") ||
           ["-", "—", "–"].includes(translation);
       }
 
@@ -699,7 +776,11 @@
               word.id = createId();
               migrationNeeded = true;
             }
-            const cleanTranslation = sanitizeTranslation(word.translation);
+            const storedTranslation = sanitizeTranslation(word.translation);
+            const cleanTranslation = ["[translation needed]", "потрібно перекласти"]
+              .includes(storedTranslation.toLocaleLowerCase("en-US"))
+              ? MISSING_TRANSLATION
+              : storedTranslation;
             if (cleanTranslation !== word.translation) {
               word.translation = cleanTranslation;
               migrationNeeded = true;
@@ -715,7 +796,11 @@
             set.lastLearnResult = normalizeLastLearnResult(set.lastLearnResult);
             if (set.lastLearnResult) {
               set.lastLearnResult.words.forEach(word => {
-                word.translation = sanitizeTranslation(word.translation);
+                const storedTranslation = sanitizeTranslation(word.translation);
+                word.translation = ["[translation needed]", "потрібно перекласти"]
+                  .includes(storedTranslation.toLocaleLowerCase("en-US"))
+                  ? MISSING_TRANSLATION
+                  : storedTranslation;
               });
             }
             if (JSON.stringify(set.lastLearnResult) !== previousResult) migrationNeeded = true;
@@ -808,6 +893,39 @@
         return button;
       }
 
+      function speakEnglishWord(term) {
+        if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+          showToast("Audio pronunciation is not supported in this browser.");
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const pronunciation = new SpeechSynthesisUtterance(term);
+        pronunciation.lang = "en-US";
+        pronunciation.rate = 0.9;
+        window.speechSynthesis.speak(pronunciation);
+      }
+
+      function createPronunciationButton(term) {
+        const button = document.createElement("button");
+        button.className = "button button-secondary pronunciation-button";
+        button.type = "button";
+        button.textContent = "🔊";
+        button.setAttribute("aria-label", `Listen to the English pronunciation of ${term}`);
+        button.title = `Listen to ${term}`;
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          speakEnglishWord(term);
+        });
+        return button;
+      }
+
+      function createPronunciationLine(word, pronunciation, className) {
+        const line = document.createElement("div");
+        line.className = `pronunciation-line ${className}`;
+        line.append(word, pronunciation);
+        return line;
+      }
+
       function renderSets() {
         deckList.replaceChildren();
         const total = sets.length;
@@ -851,9 +969,10 @@
           actions.className = "deck-actions";
           actions.append(
             makeButton("Learn", "button button-primary button-small", "learn", set.id),
-            makeButton("Word list", "button button-secondary button-small", "words", set.id),
             makeButton("Flashcards", "button button-primary button-small", "study", set.id),
-            makeButton("Take test", "button button-secondary button-small", "test", set.id),
+            makeButton("Test", "button button-primary button-small", "test", set.id),
+            makeButton("Word list", "button button-secondary button-small", "words", set.id),
+            makeButton("Download words", "button button-secondary button-small", "download", set.id),
             makeButton("Edit", "button button-secondary button-small", "edit", set.id),
             makeButton("Delete", "button button-danger button-small", "delete", set.id)
           );
@@ -1509,7 +1628,7 @@
         term.placeholder = "Word or phrase";
         term.setAttribute("aria-label", "Word or phrase");
         term.required = true;
-        term.value = word ? word.term : "";
+        term.value = word && typeof word.term === "string" ? word.term : "";
         const translationField = document.createElement("div");
         translationField.className = "translation-field";
         const translation = document.createElement("input");
@@ -1519,7 +1638,7 @@
         translation.placeholder = "Ukrainian translation";
         translation.setAttribute("aria-label", "Ukrainian translation");
         translation.required = true;
-        translation.value = word ? sanitizeTranslation(word.translation) : "";
+        translation.value = word && typeof word.translation === "string" ? sanitizeTranslation(word.translation) : "";
         const suggestions = document.createElement("div");
         suggestions.className = "translation-suggestions";
         suggestions.id = `suggestions-${createId()}`;
@@ -1730,6 +1849,7 @@
           return;
         }
         notifySkippedWords(set, activeWords.length);
+        shuffleStudyWords();
         activeSet = set;
         cardIndex = 0;
         isFlipped = false;
@@ -1738,15 +1858,29 @@
         renderStudyCard();
       }
 
+      function shuffleStudyWords() {
+        for (let index = activeWords.length - 1; index > 0; index -= 1) {
+          const randomIndex = Math.floor(Math.random() * (index + 1));
+          [activeWords[index], activeWords[randomIndex]] = [activeWords[randomIndex], activeWords[index]];
+        }
+      }
+
       function renderStudyCard() {
         const word = activeWords[cardIndex];
         document.getElementById("cardWord").textContent = isFlipped ? word.translation : word.term;
         document.getElementById("cardLabel").textContent = isFlipped ? "Translation" : "Word";
+        document.getElementById("studyPronunciation")
+          .setAttribute("aria-label", `Listen to the English pronunciation of ${word.term}`);
+        document.getElementById("studyPronunciation").title = `Listen to ${word.term}`;
         document.getElementById("flashcard").classList.toggle("is-flipped", isFlipped);
         document.getElementById("studyProgress").textContent = `${cardIndex + 1} / ${activeWords.length}`;
         document.getElementById("studyProgressFill").style.width = `${((cardIndex + 1) / activeWords.length) * 100}%`;
         document.getElementById("previousCard").disabled = cardIndex === 0;
-        document.getElementById("nextCard").disabled = cardIndex === activeWords.length - 1;
+        const nextButton = document.getElementById("nextCard");
+        const atLastCard = cardIndex === activeWords.length - 1;
+        nextButton.disabled = false;
+        nextButton.textContent = atLastCard ? "Start over" : "Next →";
+        document.getElementById("exitStudy").hidden = !atLastCard;
       }
 
       function startLearn(set) {
@@ -1759,9 +1893,7 @@
         activeSet = set;
         learnLevel = 1;
         learnRunHasAnswers = false;
-        learnLevelOneQueue = activeWords
-          .filter(word => !word.learning.learn.level1Passed)
-          .map(word => word.id);
+        learnLevelOneQueue = activeWords.map(word => word.id);
         learnLevelTwoQueue = [];
         learnCurrentWord = null;
         learnAnswered = false;
@@ -1808,6 +1940,27 @@
           }
         }
         return [correct, ...distractors].sort(() => Math.random() - .5);
+      }
+
+      function downloadDeck(set) {
+        try {
+          const contents = "\uFEFF" + set.words
+            .map(word => `${word.term}   ${word.translation}`)
+            .join("\r\n");
+          const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          const filename = set.name.replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-").replace(/[. ]+$/g, "").trim();
+          link.href = url;
+          link.download = `${filename || "deck"}.txt`;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+          console.error("Failed to download deck:", error);
+          showToast("Could not download the deck. Please try again.");
+        }
       }
 
       function renderWordList(set) {
@@ -1872,9 +2025,7 @@
 
         if (learnLevel === 1 && !learnLevelOneQueue.length) {
           learnLevel = 2;
-          learnLevelTwoQueue = activeWords
-            .filter(word => !word.learning.learn.level2Passed)
-            .map(word => word.id);
+          learnLevelTwoQueue = activeWords.map(word => word.id);
         }
 
         const queue = learnLevel === 1 ? learnLevelOneQueue : learnLevelTwoQueue;
@@ -1917,7 +2068,12 @@
             renderSets();
             showView("homeView");
           });
-          result.append(mark, title, summary, dueNote, home);
+          const repeat = document.createElement("button");
+          repeat.className = "button button-secondary";
+          repeat.type = "button";
+          repeat.textContent = "Learn again";
+          repeat.addEventListener("click", () => startLearn(activeSet));
+          result.append(mark, title, summary, dueNote, repeat, home);
           container.append(result);
           return;
         }
@@ -1943,6 +2099,8 @@
         const question = document.createElement("h2");
         question.className = "learn-question";
         question.textContent = learnLevel === 1 ? learnCurrentWord.term : learnCurrentWord.translation;
+        const pronunciation = createPronunciationButton(learnCurrentWord.term);
+        const questionLine = createPronunciationLine(question, pronunciation, "learn-question-line");
         const attemptLabel = document.createElement("p");
         attemptLabel.className = "next-review";
         attemptLabel.textContent = attempts === 0 ? "First attempt" : `Attempt ${attempts + 1}`;
@@ -1970,7 +2128,7 @@
             option.addEventListener("click", () => submitLearnAnswer(answer, feedback, nextButton, answers));
             answers.append(option);
           });
-          container.append(stage, label, question, attemptLabel, answers, feedback, footer);
+          container.append(stage, label, questionLine, attemptLabel, answers, feedback, footer);
         } else {
           const form = document.createElement("form");
           form.className = "learn-input-form";
@@ -1993,7 +2151,7 @@
             input.disabled = true;
             check.disabled = true;
           });
-          container.append(stage, label, question, attemptLabel, form, feedback, footer);
+          container.append(stage, label, questionLine, attemptLabel, form, feedback, footer);
           input.focus();
         }
       }
@@ -2021,13 +2179,17 @@
         learnRunHasAnswers = true;
         if (correct) {
           progress[passedKey] = true;
-          progress[firstTryKey] = firstAttempt;
+          if (progress[firstTryKey] === null) {
+            progress[firstTryKey] = firstAttempt;
+          }
           feedback.textContent = learnLevel === 1
             ? "Correct! Level 1 completed."
             : "Correct! Word fully learned.";
           feedback.classList.add("good");
         } else {
-          progress[firstTryKey] = false;
+          if (progress[firstTryKey] === null) {
+            progress[firstTryKey] = false;
+          }
           (learnLevel === 1 ? learnLevelOneQueue : learnLevelTwoQueue).push(word.id);
           if (answers) {
             [...answers.children].forEach(option => {
@@ -2164,38 +2326,74 @@
         }
       }
 
-      function importWordsFromText() {
+      async function importWordsFromText() {
         const textarea = document.getElementById("bulkWords");
+        const importButton = document.getElementById("importWordsButton");
         const lines = textarea.value.split(/\r?\n/);
         const words = [];
         const invalidLines = [];
         lines.forEach((line, index) => {
           if (!line.trim()) return;
-          const pair = line.split(/ {3,}/);
-          if (pair.length !== 2 || !pair[0].trim() || !pair[1].trim()) {
+          const pair = line.trim().split(/ {3,}/);
+          if (pair.length > 2 || !pair[0].trim()) {
             invalidLines.push(index + 1);
             return;
           }
-          words.push({ term: pair[0].trim(), translation: pair[1].trim() });
+          words.push({ term: pair[0].trim(), translation: pair.length === 2 ? pair[1].trim() : "" });
         });
 
         if (!lines.some(line => line.trim())) {
-          showToast("Paste words and translations separated by three spaces.");
+          showToast("Paste one English word or phrase per line.");
           return;
         }
         if (invalidLines.length) {
-          showToast(`Check lines ${invalidLines.join(", ")}: separate each word and translation with three spaces.`);
+          showToast(`Check lines ${invalidLines.join(", ")}: use one word and an optional translation separated by three spaces.`);
+          return;
+        }
+        if (!words.length) {
+          showToast("No valid words to import.");
           return;
         }
 
-        const emptyRows = [...document.querySelectorAll(".word-row")].filter(row =>
-          !row.querySelector('[name="term"]').value.trim() &&
-          !row.querySelector('[name="translation"]').value.trim()
-        );
-        emptyRows.forEach(row => row.remove());
-        words.forEach(word => addWordRow(word));
-        textarea.value = "";
-        showToast(`Imported ${words.length} cards.`);
+        const untranslatedWords = words.filter(word => !word.translation);
+        importButton.disabled = true;
+        importButton.textContent = "Translating…";
+        try {
+          if (untranslatedWords.length) {
+            const controller = new AbortController();
+            const translated = await translateLibraryWords(
+              untranslatedWords.map(word => ({ term: word.term })),
+              untranslatedWords.length,
+              controller.signal,
+              () => {}
+            );
+            untranslatedWords.forEach((word, index) => {
+              word.translation = translated.words[index].translation;
+            });
+          }
+
+          const emptyRows = [...document.querySelectorAll(".word-row")].filter(row =>
+            !row.querySelector('[name="term"]').value.trim() &&
+            !row.querySelector('[name="translation"]').value.trim()
+          );
+          emptyRows.forEach(row => row.remove());
+          words.forEach(word => addWordRow(word));
+          textarea.value = "";
+          const needsManualTranslation = words.filter(word => word.translation === MISSING_TRANSLATION).length;
+          showToast(
+            `Imported ${words.length} cards.` +
+            (untranslatedWords.length ? ` Translated ${untranslatedWords.length - needsManualTranslation}.` : "") +
+            (needsManualTranslation
+              ? ` ${needsManualTranslation} ${needsManualTranslation === 1 ? "word needs" : "words need"} manual translation.`
+              : "")
+          );
+        } catch (error) {
+          console.error("Failed to import words:", error);
+          showToast("Could not import words. Please try again.");
+        } finally {
+          importButton.disabled = false;
+          importButton.textContent = "Import words";
+        }
       }
 
       function renderQuestion() {
@@ -2242,6 +2440,8 @@
         const question = document.createElement("h2");
         question.className = "question";
         question.textContent = current.term;
+        const pronunciation = createPronunciationButton(current.term);
+        const questionLine = createPronunciationLine(question, pronunciation, "question-line");
         const answers = document.createElement("div");
         answers.className = "answers";
         const distractors = activeWords
@@ -2277,7 +2477,7 @@
           renderQuestion();
         });
         footer.append(score, nextButton);
-        container.append(label, question, answers, feedback, footer);
+        container.append(label, questionLine, answers, feedback, footer);
       }
 
       function selectAnswer(button, selected, word, answers, feedback, nextButton) {
@@ -2311,6 +2511,15 @@
       }
 
       document.getElementById("createButton").addEventListener("click", openEditor);
+      document.getElementById("themePicker").addEventListener("change", event => {
+        const theme = applyTheme(event.target.value);
+        try {
+          localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch (error) {
+          console.error("Failed to save theme:", error);
+          showToast("Could not save your theme preference.");
+        }
+      });
       document.getElementById("mergeDecksButton").addEventListener("click", openMergeView);
       document.getElementById("mergeForm").addEventListener("submit", mergeSelectedSets);
       document.getElementById("onlineDecksButton").addEventListener("click", () => {
@@ -2356,6 +2565,7 @@
         }
         if (button.dataset.action === "study") startStudy(set);
         if (button.dataset.action === "test") startTest(set);
+        if (button.dataset.action === "download") downloadDeck(set);
         if (button.dataset.action === "edit") openEditor(set);
         if (button.dataset.action === "delete" && window.confirm(`Delete the "${set.name}" deck?`)) {
           const previous = sets;
@@ -2403,9 +2613,21 @@
           sets = previousSets;
         }
       });
-      document.getElementById("flashcard").addEventListener("click", () => {
+      document.getElementById("flashcard").addEventListener("click", event => {
+        if (event.target.closest(".pronunciation-button")) return;
         isFlipped = !isFlipped;
         renderStudyCard();
+      });
+      document.getElementById("flashcard").addEventListener("keydown", event => {
+        if ((event.key === "Enter" || event.key === " ") && event.target === event.currentTarget) {
+          event.preventDefault();
+          isFlipped = !isFlipped;
+          renderStudyCard();
+        }
+      });
+      document.getElementById("studyPronunciation").addEventListener("click", event => {
+        event.stopPropagation();
+        if (activeWords[cardIndex]) speakEnglishWord(activeWords[cardIndex].term);
       });
       document.getElementById("previousCard").addEventListener("click", () => {
         if (cardIndex > 0) {
@@ -2417,13 +2639,21 @@
       document.getElementById("nextCard").addEventListener("click", () => {
         if (cardIndex < activeWords.length - 1) {
           cardIndex += 1;
-          isFlipped = false;
-          renderStudyCard();
+        } else {
+          shuffleStudyWords();
+          cardIndex = 0;
         }
+        isFlipped = false;
+        renderStudyCard();
+      });
+      document.getElementById("exitStudy").addEventListener("click", () => {
+        renderSets();
+        showView("homeView");
       });
 
       sets = loadSets();
       if (migrationNeeded) saveSets();
+      loadTheme();
       testHistory = loadTestHistory();
       renderSets();
     })();
